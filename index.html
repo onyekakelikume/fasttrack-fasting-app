@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FastTrack - Intermittent Fasting Timer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #FF6B6B;
+  --yellow: #FECA57;
+  --green: #48C774;
+  --blue: #3B82F6;
+  --purple: #8B5CF6;
+  --lavender: #E8E0F0;
+  --gold: #F59E0B;
+  --orange: #FB923C;
+  --dark: #1E293B;
+  --gray: #94A3B8;
+  --light-gray: #F1F5F9;
+  --white: #FFFFFF;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #FFFFFF 0%, var(--lavender) 100%);
+  min-height: 100vh;
+  color: var(--dark);
+  overflow-x: hidden;
+}
+.app-container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 80px;
+}
+header {
+  text-align: center;
+  padding: 20px 0 10px;
+}
+header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+header p {
+  color: var(--gray);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* PLAN SELECTION */
+.plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.plan-card {
+  border: 2px solid var(--light-gray);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+}
+.plan-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.plan-card.selected { border-width: 3px; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.plan-card[data-border="coral"] { border-color: var(--coral); }
+.plan-card[data-border="yellow"] { border-color: var(--yellow); }
+.plan-card[data-border="blue"] { border-color: var(--blue); }
+.plan-card[data-border="purple"] { border-color: var(--purple); }
+.plan-card[data-border="green"] { border-color: var(--green); }
+.plan-card .plan-hours { font-size: 28px; font-weight: 800; }
+.plan-card .plan-label { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.plan-card .plan-name { font-size: 13px; font-weight: 600; margin-top: 4px; }
+.plan-card[data-border="coral"] .plan-hours { color: var(--coral); }
+.plan-card[data-border="yellow"] .plan-hours { color: var(--gold); }
+.plan-card[data-border="blue"] .plan-hours { color: var(--blue); }
+.plan-card[data-border="purple"] .plan-hours { color: var(--purple); }
+.plan-card[data-border="green"] .plan-hours { color: var(--green); }
+.custom-input-wrap {
+  display: none;
+  margin-top: 12px;
+  text-align: center;
+}
+.custom-input-wrap.show { display: block; }
+.custom-input-wrap input {
+  width: 100px;
+  padding: 10px;
+  border: 2px solid var(--green);
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+}
+.custom-input-wrap label { font-size: 12px; color: var(--gray); margin-left: 6px; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  color: white;
+  width: 100%;
+  font-size: 16px;
+  padding: 16px;
+}
+.btn-primary:hover { box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
+.btn-secondary {
+  background: var(--light-gray);
+  color: var(--dark);
+}
+.btn-danger {
+  background: var(--coral);
+  color: white;
+}
+.btn-success {
+  background: var(--green);
+  color: white;
+}
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+/* TIMER SCREEN */
+.timer-ring-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 16px;
+  position: relative;
+}
+.timer-ring-wrap svg { filter: drop-shadow(0 4px 12px rgba(139,92,246,0.2)); }
+.timer-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.timer-percent {
+  font-size: 42px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.timer-countdown {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-top: 4px;
+}
+.timer-label-small {
+  font-size: 11px;
+  color: var(--gray);
+  margin-top: 2px;
+}
+.timer-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.timer-info-box {
+  background: var(--light-gray);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+.timer-info-box .label { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+.timer-info-box .value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+.timer-btns {
+  display: flex;
+  gap: 10px;
+}
+.timer-btns .btn { flex: 1; }
+/* BODY STAGES */
+.stage-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  align-items: flex-start;
+  position: relative;
+}
+.stage-item + .stage-item { border-top: 1px solid var(--light-gray); }
+.stage-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: var(--light-gray);
+  color: var(--gray);
+}
+.stage-item.completed .stage-icon { background: var(--green); color: white; }
+.stage-item.current .stage-icon {
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  color: white;
+  animation: glow 2s ease-in-out infinite;
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(139,92,246,0.4); }
+  50% { box-shadow: 0 0 20px rgba(139,92,246,0.7); }
+}
+.stage-text .stage-name { font-size: 13px; font-weight: 700; }
+.stage-text .stage-time { font-size: 11px; color: var(--gray); }
+.stage-text .stage-desc { font-size: 11px; color: var(--gray); margin-top: 2px; line-height: 1.4; }
+.stage-item.current .stage-name { color: var(--purple); }
+/* BODY CYCLE CHART */
+.cycle-bar {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 36px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.cycle-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.cycle-segment:hover { filter: brightness(1.1); }
+.cycle-segment.seg-0 { background: var(--orange); }
+.cycle-segment.seg-1 { background: var(--blue); }
+.cycle-segment.seg-2 { background: var(--coral); }
+.cycle-segment.seg-3 { background: var(--purple); }
+.cycle-segment.seg-4 { background: var(--green); }
+.cycle-segment.seg-5 { background: var(--gold); }
+.you-are-here {
+  position: absolute;
+  top: -22px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--coral);
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+}
+.you-are-here::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--coral);
+  margin: 1px auto 0;
+}
+.cycle-dropdown {
+  display: none;
+  background: var(--light-gray);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  animation: fadeIn 0.2s;
+}
+.cycle-dropdown.show { display: block; }
+.cycle-dropdown .cd-title { font-weight: 700; margin-bottom: 4px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+/* ACCORDION */
+.accordion-item {
+  border-bottom: 1px solid var(--light-gray);
+}
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: 44px;
+}
+.accordion-header .emoji { font-size: 18px; }
+.accordion-header .arrow { transition: transform 0.2s; font-size: 12px; color: var(--gray); }
+.accordion-item.open .arrow { transform: rotate(180deg); }
+.accordion-body {
+  display: none;
+  padding: 0 0 14px 30px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #475569;
+}
+.accordion-item.open .accordion-body { display: block; animation: fadeIn 0.2s; }
+.accordion-body li { margin-bottom: 4px; }
+/* CELEBRATION */
+.celebration-screen {
+  text-align: center;
+  padding: 30px 16px;
+}
+.celebration-screen .trophy { font-size: 72px; animation: bounce 1s ease-in-out infinite; }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.celebration-screen h2 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 16px 0 8px;
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.celebration-screen p { color: var(--gray); font-size: 14px; }
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 20px 0;
+}
+.summary-box {
+  background: var(--light-gray);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+.summary-box .s-label { font-size: 10px; color: var(--gray); text-transform: uppercase; font-weight: 600; }
+.summary-box .s-value { font-size: 18px; font-weight: 800; margin-top: 4px; }
+/* CONFETTI */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.2s;
+}
+.modal-box h3 { font-size: 18px; margin-bottom: 8px; }
+.modal-box p { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+.modal-btns { display: flex; gap: 10px; }
+.modal-btns .btn { flex: 1; }
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 12px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  z-index: 50;
+}
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  font-family: inherit;
+  min-width: 60px;
+}
+.nav-tab .nav-icon { font-size: 22px; }
+.nav-tab .nav-label { font-size: 10px; font-weight: 600; color: var(--gray); }
+.nav-tab.active { background: linear-gradient(135deg, rgba(255,107,107,0.12), rgba(139,92,246,0.12)); }
+.nav-tab.active .nav-label { color: var(--purple); font-weight: 700; }
+/* WEIGHT TRACKER */
+.weight-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.unit-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 2px solid var(--light-gray); }
+.unit-btn { padding: 6px 14px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; background: var(--light-gray); color: var(--gray); transition: all 0.2s; }
+.unit-btn.active { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; }
+.weight-input-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: flex-end; }
+.weight-input-row .input-group { flex: 1; }
+.weight-input-row .input-group label { display: block; font-size: 11px; font-weight: 600; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; }
+.weight-input-row .input-group input { width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 10px; font-size: 16px; font-weight: 700; text-align: center; outline: none; font-family: inherit; }
+.weight-input-row .input-group input:focus { border-color: var(--purple); }
+.weight-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.weight-stat { background: var(--light-gray); border-radius: 10px; padding: 10px; text-align: center; }
+.weight-stat .ws-label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 600; }
+.weight-stat .ws-value { font-size: 16px; font-weight: 800; margin-top: 2px; }
+.weight-chart-wrap { background: var(--light-gray); border-radius: 12px; padding: 14px; margin-bottom: 14px; min-height: 160px; }
+.weight-entry { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--light-gray); font-size: 13px; }
+.weight-entry .we-date { color: var(--gray); font-size: 12px; }
+.weight-entry .we-val { font-weight: 700; font-size: 15px; }
+.weight-entry .we-del { background: none; border: none; color: var(--coral); cursor: pointer; font-size: 16px; padding: 4px 8px; }
+/* BMI */
+.bmi-section { margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--light-gray); }
+.bmi-inputs { display: flex; gap: 8px; margin-bottom: 14px; }
+.bmi-inputs .input-group { flex: 1; }
+.bmi-inputs .input-group label { display: block; font-size: 11px; font-weight: 600; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; }
+.bmi-inputs .input-group input { width: 100%; padding: 10px; border: 2px solid var(--light-gray); border-radius: 10px; font-size: 16px; font-weight: 700; text-align: center; outline: none; font-family: inherit; }
+.bmi-result { text-align: center; padding: 16px; border-radius: 12px; margin-top: 12px; }
+.bmi-number { font-size: 42px; font-weight: 800; line-height: 1; }
+.bmi-category { font-size: 16px; font-weight: 700; margin-top: 4px; }
+.bmi-gauge { height: 16px; border-radius: 8px; background: linear-gradient(90deg, #3B82F6 0%, #48C774 30%, #FECA57 60%, #FF6B6B 100%); position: relative; margin: 16px 0 8px; }
+.bmi-marker { position: absolute; top: -6px; width: 4px; height: 28px; background: var(--dark); border-radius: 2px; transform: translateX(-50%); transition: left 0.3s; }
+.bmi-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--gray); font-weight: 600; }
+.bmi-tip { font-size: 13px; color: #475569; line-height: 1.5; margin-top: 12px; padding: 12px; background: var(--light-gray); border-radius: 10px; }
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .app-container { padding: 12px; padding-bottom: 70px; }
+  header h1 { font-size: 24px; }
+  .timer-percent { font-size: 36px; }
+  .timer-countdown { font-size: 16px; }
+}
+@media (max-width: 480px) {
+  .plan-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .plan-card { padding: 10px 8px; }
+  .plan-card .plan-hours { font-size: 24px; }
+  .timer-btns { flex-direction: column; }
+  .timer-btns .btn { width: 100%; }
+  .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cycle-segment { font-size: 8px; }
+  .card { padding: 16px; }
+}
+</style>
+  <script type="application/ld+json">
+{
+  "@context": "urn:goose.ai:schema",
+  "@type": "GooseApp",
+  "name": "fasttrack-fasting-timer",
+  "description": "Cheerful intermittent fasting timer with progress tracking, body stages, and breaking-fast guide.",
+  "width": 480,
+  "height": 900,
+  "resizable": true,
+  "mcpServers": [
+    "apps"
+  ]
+}
+  </script>
+  <script type="application/x-goose-prd">
+Build a bright, cheerful intermittent fasting timer app called FastTrack. Light gradient background (white to lavender). Vibrant colors: coral, yellow, green, blue, purple. White cards with soft shadows.
+
+FEATURES:
+1. Plan selection: 12hr Beginner, 16hr Popular, 18hr Advanced, 20hr Warrior, Custom (1-48hr input). Cards with colorful borders.
+
+2. Timer screen: Large SVG circular progress ring (gradient fill), percentage inside, HH:MM:SS countdown, elapsed time, start/end times. Pause/Resume and Break Fast buttons (with confirmation modal).
+
+3. Body stages timeline showing only stages relevant to chosen duration. Completed=green checkmark, Current=glowing, Upcoming=gray. Stages: Fed State 0-3hr, Early Fasting 3-8hr, Fat Burning 8-12hr, Ketosis 12-16hr, Autophagy 16-20hr, Peak Renewal 20-24hr, Extended 24+hr. Each with body descriptions.
+
+4. 24-Hour Body Cycle Chart: Horizontal color-coded segmented bar. Six segments (0-4hr Blood Sugar Rises orange, 4-8hr Blood Sugar Drops blue, 8-12hr Fat Burning coral, 12-16hr Autophagy purple, 16-20hr Catabolic green, 20-24hr Deep Renewal gold). Each segment clickable to expand dropdown explanation. You Are Here marker during fasting.
+
+5. Breaking Your Fast Guide: Accordion sections - Start With Liquids first 15min (warm water lemon, bone broth, herbal tea), Light Foods 15-30min (cooked veggies, avocado, nuts, yogurt), Full Meal 45-60min (lean protein, complex carbs, healthy fats), Foods to Avoid (sugar, processed, fried, alcohol), Pro Tips (eat slowly, chew well, stay hydrated).
+
+6. Celebration screen with confetti when fast completes, showing summary and tips.
+
+7. Rotating motivational quotes in footer.
+
+8. FULLY MOBILE RESPONSIVE: viewport meta tag, media queries for 768px and 480px, stacked cards on mobile, scaled ring, full-width buttons with 44px tap targets, no horizontal scroll, touch-friendly.
+  </script>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>⚡ FastTrack</h1>
+    <p>Your cheerful fasting companion</p>
+  </header>
+
+  <!-- SCREEN 1: Plan Selection -->
+  <div id="screen-plan" class="screen active">
+    <div class="card">
+      <div class="card-title">🎯 Choose Your Fasting Plan</div>
+      <div class="plan-grid">
+        <div class="plan-card" data-border="coral" data-hours="12" onclick="selectPlan(this, 12)">
+          <div class="plan-hours">12h</div>
+          <div class="plan-label">Beginner</div>
+          <div class="plan-name">Easy Start</div>
+        </div>
+        <div class="plan-card" data-border="yellow" data-hours="16" onclick="selectPlan(this, 16)">
+          <div class="plan-hours">16h</div>
+          <div class="plan-label">Popular</div>
+          <div class="plan-name">16:8 Method</div>
+        </div>
+        <div class="plan-card" data-border="blue" data-hours="18" onclick="selectPlan(this, 18)">
+          <div class="plan-hours">18h</div>
+          <div class="plan-label">Advanced</div>
+          <div class="plan-name">Deep Fast</div>
+        </div>
+        <div class="plan-card" data-border="purple" data-hours="20" onclick="selectPlan(this, 20)">
+          <div class="plan-hours">20h</div>
+          <div class="plan-label">Warrior</div>
+          <div class="plan-name">20:4 Method</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="plan-card" data-border="green" style="max-width:200px;margin:0 auto;" onclick="selectPlan(this, 'custom')">
+          <div class="plan-hours" style="font-size:20px;">⚙️</div>
+          <div class="plan-label">Custom</div>
+          <div class="plan-name">Set Your Own</div>
+        </div>
+      </div>
+      <div id="custom-input" class="custom-input-wrap">
+        <input type="number" id="custom-hours" min="1" max="48" value="14" placeholder="14">
+        <label>hours (1-48)</label>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="startFast()">🚀 Start Fasting</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Timer -->
+  <div id="screen-timer" class="screen">
+    <div class="card" style="text-align:center;">
+      <div class="timer-ring-wrap">
+        <svg id="timer-svg" width="220" height="220" viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:var(--coral)"/>
+              <stop offset="100%" style="stop-color:var(--purple)"/>
+            </linearGradient>
+          </defs>
+          <circle cx="110" cy="110" r="95" fill="none" stroke="#F1F5F9" stroke-width="14"/>
+          <circle id="progress-ring" cx="110" cy="110" r="95" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+        </svg>
+        <div class="timer-center">
+          <div class="timer-percent" id="timer-percent">0%</div>
+          <div class="timer-countdown" id="timer-countdown">00:00:00</div>
+          <div class="timer-label-small">remaining</div>
+        </div>
+      </div>
+      <div class="timer-info-row">
+        <div class="timer-info-box">
+          <div class="label">Elapsed</div>
+          <div class="value" id="timer-elapsed">00:00:00</div>
+        </div>
+        <div class="timer-info-box">
+          <div class="label">Goal</div>
+          <div class="value" id="timer-goal">16h 0m</div>
+        </div>
+        <div class="timer-info-box">
+          <div class="label">Started</div>
+          <div class="value" id="timer-start">--:--</div>
+        </div>
+        <div class="timer-info-box">
+          <div class="label">Ends</div>
+          <div class="value" id="timer-end">--:--</div>
+        </div>
+      </div>
+      <div class="timer-btns">
+        <button class="btn btn-secondary" id="btn-pause" onclick="togglePause()">⏸️ Pause</button>
+        <button class="btn btn-danger" onclick="showBreakModal()">🍽️ Break Fast</button>
+      </div>
+    </div>
+
+    <!-- Body Stages -->
+    <div class="card" id="stages-card">
+      <div class="card-title">🧬 Body Stages</div>
+      <div id="stages-list"></div>
+    </div>
+
+    <!-- 24h Body Cycle -->
+    <div class="card">
+      <div class="card-title">📊 24-Hour Body Cycle</div>
+      <div style="position:relative;margin-top:24px;margin-bottom:8px;">
+        <div id="you-are-here-marker" class="you-are-here" style="display:none;">📍 You</div>
+        <div class="cycle-bar" id="cycle-bar">
+          <div class="cycle-segment seg-0" onclick="toggleCycleInfo(0)">0-4h</div>
+          <div class="cycle-segment seg-1" onclick="toggleCycleInfo(1)">4-8h</div>
+          <div class="cycle-segment seg-2" onclick="toggleCycleInfo(2)">8-12h</div>
+          <div class="cycle-segment seg-3" onclick="toggleCycleInfo(3)">12-16h</div>
+          <div class="cycle-segment seg-4" onclick="toggleCycleInfo(4)">16-20h</div>
+          <div class="cycle-segment seg-5" onclick="toggleCycleInfo(5)">20-24h</div>
+        </div>
+      </div>
+      <div id="cycle-info-0" class="cycle-dropdown"><div class="cd-title">🍊 Blood Sugar Rises (0-4h)</div>Your body digests your last meal. Blood sugar and insulin levels rise as nutrients are absorbed. Energy is readily available from glucose.</div>
+      <div id="cycle-info-1" class="cycle-dropdown"><div class="cd-title">💧 Blood Sugar Drops (4-8h)</div>Insulin levels begin to fall. Your body finishes processing the last meal and starts transitioning to using stored energy. You may feel initial hunger signals.</div>
+      <div id="cycle-info-2" class="cycle-dropdown"><div class="cd-title">🔥 Fat Burning Begins (8-12h)</div>With insulin low, your body increasingly turns to fat stores for energy. Glycogen reserves in the liver start depleting. Fat oxidation ramps up significantly.</div>
+      <div id="cycle-info-3" class="cycle-dropdown"><div class="cd-title">💜 Autophagy Activates (12-16h)</div>Cellular cleanup begins! Your cells start recycling damaged components. Human Growth Hormone increases. Ketone production accelerates for brain fuel.</div>
+      <div id="cycle-info-4" class="cycle-dropdown"><div class="cd-title">💚 Catabolic Phase (16-20h)</div>Deep fat burning and cellular repair intensify. Inflammation markers decrease. Brain-derived neurotrophic factor (BDNF) increases, supporting brain health.</div>
+      <div id="cycle-info-5" class="cycle-dropdown"><div class="cd-title">🌟 Deep Renewal (20-24h)</div>Maximum autophagy and cellular regeneration. Immune system gets a significant boost. Stem cell regeneration may begin. Your body is in deep healing mode.</div>
+    </div>
+
+    <!-- Breaking Your Fast Guide -->
+    <div class="card">
+      <div class="card-title">🍽️ Breaking Your Fast Guide</div>
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header"><span><span class="emoji">💧</span> Start With Liquids (first 15 min)</span><span class="arrow">▼</span></div>
+        <div class="accordion-body"><ul><li>Warm water with lemon — gentle on the stomach</li><li>Bone broth — rich in minerals and collagen</li><li>Herbal tea — chamomile or ginger to soothe digestion</li></ul></div>
+      </div>
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header"><span><span class="emoji">🥑</span> Light Foods (15-30 min)</span><span class="arrow">▼</span></div>
+        <div class="accordion-body"><ul><li>Cooked vegetables — steamed or sautéed for easy digestion</li><li>Avocado — healthy fats that are gentle on the gut</li><li>Small handful of nuts — almonds or walnuts</li><li>Plain yogurt — probiotics to support gut health</li></ul></div>
+      </div>
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header"><span><span class="emoji">🍗</span> Full Meal (45-60 min)</span><span class="arrow">▼</span></div>
+        <div class="accordion-body"><ul><li>Lean protein — chicken, fish, eggs, or tofu</li><li>Complex carbs — sweet potato, brown rice, quinoa</li><li>Healthy fats — olive oil, avocado, nuts</li></ul></div>
+      </div>
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header"><span><span class="emoji">🚫</span> Foods to Avoid</span><span class="arrow">▼</span></div>
+        <div class="accordion-body"><ul><li>Sugary foods — candy, pastries, soda</li><li>Processed foods — chips, fast food</li><li>Fried foods — heavy on the digestive system</li><li>Alcohol — dehydrating and hard on an empty stomach</li></ul></div>
+      </div>
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header"><span><span class="emoji">💡</span> Pro Tips</span><span class="arrow">▼</span></div>
+        <div class="accordion-body"><ul><li>Eat slowly — give your body time to adjust</li><li>Chew well — aids digestion significantly</li><li>Stay hydrated — continue drinking water with your meal</li><li>Listen to your body — stop when you feel satisfied, not full</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Celebration -->
+  <div id="screen-celebration" class="screen">
+    <div class="card celebration-screen">
+      <div class="trophy">🏆</div>
+      <h2>Fast Complete!</h2>
+      <p>Amazing work! You crushed your fasting goal!</p>
+      <div class="summary-grid">
+        <div class="summary-box">
+          <div class="s-label">Duration</div>
+          <div class="s-value" id="sum-duration">--</div>
+        </div>
+        <div class="summary-box">
+          <div class="s-label">Goal</div>
+          <div class="s-value" id="sum-goal">--</div>
+        </div>
+        <div class="summary-box">
+          <div class="s-label">Started</div>
+          <div class="s-value" id="sum-start">--</div>
+        </div>
+        <div class="summary-box">
+          <div class="s-label">Ended</div>
+          <div class="s-value" id="sum-end">--</div>
+        </div>
+      </div>
+      <div class="card" style="background:var(--light-gray);text-align:left;margin-top:8px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:6px;">💡 Post-Fast Tip</div>
+        <div style="font-size:13px;color:#475569;line-height:1.6;" id="post-fast-tip">Start with warm water or bone broth, then ease into a light meal after 15-30 minutes.</div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="resetApp()">🔄 Start New Fast</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Weight Tracker -->
+  <div id="screen-weight" class="screen">
+    <div class="card">
+      <div class="weight-header-row">
+        <div class="card-title" style="margin-bottom:0;">⚖️ Weight Tracker</div>
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="btn-lbs" onclick="setUnit('lbs')">lbs</button>
+          <button class="unit-btn" id="btn-kg" onclick="setUnit('kg')">kg</button>
+        </div>
+      </div>
+      <div class="weight-input-row">
+        <div class="input-group">
+          <label>Weight</label>
+          <input type="number" id="weight-input" placeholder="170" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>Goal</label>
+          <input type="number" id="goal-input" placeholder="155" step="0.1">
+        </div>
+        <button class="btn btn-primary" style="padding:10px 18px;min-width:70px;font-size:14px;" onclick="saveWeight()">Save</button>
+      </div>
+      <div class="weight-stats">
+        <div class="weight-stat">
+          <div class="ws-label">Current</div>
+          <div class="ws-value" id="ws-current">--</div>
+        </div>
+        <div class="weight-stat">
+          <div class="ws-label">Start</div>
+          <div class="ws-value" id="ws-start">--</div>
+        </div>
+        <div class="weight-stat">
+          <div class="ws-label">Change</div>
+          <div class="ws-value" id="ws-change">--</div>
+        </div>
+      </div>
+      <div class="card-title" style="font-size:14px;">📈 Progress Chart</div>
+      <div class="weight-chart-wrap">
+        <svg id="weight-chart" width="100%" height="140" viewBox="0 0 400 140"></svg>
+      </div>
+      <div class="card-title" style="font-size:14px;">📋 Recent Entries</div>
+      <div id="weight-entries"></div>
+    </div>
+
+    <!-- BMI Calculator -->
+    <div class="card">
+      <div class="card-title">📐 BMI Calculator</div>
+      <div class="bmi-inputs">
+        <div class="input-group">
+          <label>Feet</label>
+          <input type="number" id="bmi-feet" placeholder="5" min="1" max="8">
+        </div>
+        <div class="input-group">
+          <label>Inches</label>
+          <input type="number" id="bmi-inches" placeholder="10" min="0" max="11">
+        </div>
+        <div class="input-group">
+          <label id="bmi-weight-label">Weight (lbs)</label>
+          <input type="number" id="bmi-weight" placeholder="170" step="0.1">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calculateBMI()">Calculate BMI</button>
+      <div id="bmi-result-area" style="display:none;">
+        <div class="bmi-result" id="bmi-result-box">
+          <div class="bmi-number" id="bmi-number">--</div>
+          <div class="bmi-category" id="bmi-category">--</div>
+        </div>
+        <div class="bmi-gauge">
+          <div class="bmi-marker" id="bmi-marker" style="left:50%;"></div>
+        </div>
+        <div class="bmi-labels">
+          <span>Underweight</span>
+          <span>Normal</span>
+          <span>Overweight</span>
+          <span>Obese</span>
+        </div>
+        <div class="bmi-tip" id="bmi-tip"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="break-modal">
+  <div class="modal-box">
+    <h3>🍽️ Break Your Fast?</h3>
+    <p>Are you sure you want to end your fast early? Your progress will be saved.</p>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="hideBreakModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="breakFast()">Yes, Break Fast</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti-container" id="confetti-container"></div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-tab active" id="nav-timer" onclick="switchTab('timer')">
+    <span class="nav-icon">⏱️</span>
+    <span class="nav-label">Timer</span>
+  </button>
+  <button class="nav-tab" id="nav-cycle" onclick="switchTab('cycle')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Cycle</span>
+  </button>
+  <button class="nav-tab" id="nav-weight" onclick="switchTab('weight')">
+    <span class="nav-icon">⚖️</span>
+    <span class="nav-label">Weight</span>
+  </button>
+  <button class="nav-tab" id="nav-tips" onclick="switchTab('tips')">
+    <span class="nav-icon">💡</span>
+    <span class="nav-label">Tips</span>
+  </button>
+</div>
+
+<script>
+// STATE
+let state = {
+  selectedPlan: null,
+  selectedHours: 0,
+  startTime: null,
+  endTime: null,
+  totalMs: 0,
+  timerInterval: null,
+  isPaused: false,
+  pausedElapsed: 0,
+  pauseStart: null,
+  totalPausedMs: 0,
+  completed: false
+};
+
+const STAGES = [
+  { name: 'Fed State', range: '0-3h', startH: 0, endH: 3, desc: 'Your body is digesting and absorbing nutrients from your last meal. Insulin levels are elevated.', icon: '🍽️' },
+  { name: 'Early Fasting', range: '3-8h', startH: 3, endH: 8, desc: 'Insulin drops, body begins transitioning from glucose to stored energy. Digestion completes.', icon: '⏳' },
+  { name: 'Fat Burning', range: '8-12h', startH: 8, endH: 12, desc: 'Glycogen stores deplete, fat oxidation increases significantly. Your body switches fuel sources.', icon: '🔥' },
+  { name: 'Ketosis', range: '12-16h', startH: 12, endH: 16, desc: 'Ketone production ramps up, providing clean fuel for your brain. Growth hormone increases.', icon: '⚡' },
+  { name: 'Autophagy', range: '16-20h', startH: 16, endH: 20, desc: 'Cellular cleanup activates! Damaged proteins and organelles are recycled. Inflammation decreases.', icon: '🧬' },
+  { name: 'Peak Renewal', range: '20-24h', startH: 20, endH: 24, desc: 'Maximum cellular regeneration and immune system boost. Deep healing processes are underway.', icon: '🌟' },
+  { name: 'Extended Fast', range: '24h+', startH: 24, endH: 48, desc: 'Stem cell regeneration may begin. Immune system resets. Only for experienced fasters.', icon: '🚀' }
+];
+
+const QUOTES = [
+  '"The best time to start is now." ✨',
+  '"Your body is stronger than you think." 💪',
+  '"Every hour of fasting is a gift to your cells." 🎁',
+  '"Discipline is choosing what you want most." 🎯',
+  '"Fasting is the greatest remedy — the physician within." 🩺',
+  '"Small steps lead to big transformations." 🦋',
+  '"You are not hungry, you are healing." 💚',
+  '"Trust the process, embrace the journey." 🌈',
+  '"Your future self will thank you." 🙏',
+  '"Consistency beats perfection every time." ⭐'
+];
+
+let quoteIndex = 0;
+
+// PLAN SELECTION
+function selectPlan(el, hours) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  
+  const customInput = document.getElementById('custom-input');
+  if (hours === 'custom') {
+    customInput.classList.add('show');
+    state.selectedPlan = 'custom';
+    state.selectedHours = parseInt(document.getElementById('custom-hours').value) || 14;
+  } else {
+    customInput.classList.remove('show');
+    state.selectedPlan = hours;
+    state.selectedHours = hours;
+  }
+}
+
+document.getElementById('custom-hours').addEventListener('input', function() {
+  let v = parseInt(this.value);
+  if (v < 1) v = 1;
+  if (v > 48) v = 48;
+  state.selectedHours = v;
+});
+
+// START FAST
+function startFast() {
+  if (!state.selectedPlan) {
+    alert('Please select a fasting plan first!');
+    return;
+  }
+  if (state.selectedPlan === 'custom') {
+    state.selectedHours = parseInt(document.getElementById('custom-hours').value) || 14;
+    if (state.selectedHours < 1 || state.selectedHours > 48) {
+      alert('Please enter hours between 1 and 48.');
+      return;
+    }
+  }
+
+  state.startTime = Date.now();
+  state.totalMs = state.selectedHours * 3600000;
+  state.endTime = state.startTime + state.totalMs;
+  state.isPaused = false;
+  state.totalPausedMs = 0;
+  state.completed = false;
+
+  document.getElementById('timer-goal').textContent = state.selectedHours + 'h 0m';
+  document.getElementById('timer-start').textContent = formatTime(new Date(state.startTime));
+  document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
+
+  buildStages();
+  showScreen('screen-timer');
+  startTimer();
+}
+
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function updateTimer() {
+  if (state.isPaused) return;
+
+  const now = Date.now();
+  const elapsed = now - state.startTime - state.totalPausedMs;
+  const remaining = Math.max(0, state.totalMs - elapsed);
+  const progress = Math.min(1, elapsed / state.totalMs);
+
+  // Update ring
+  const circumference = 2 * Math.PI * 95;
+  const offset = circumference * (1 - progress);
+  document.getElementById('progress-ring').setAttribute('stroke-dashoffset', offset);
+
+  // Update text
+  document.getElementById('timer-percent').textContent = Math.floor(progress * 100) + '%';
+  document.getElementById('timer-countdown').textContent = formatDuration(remaining);
+  document.getElementById('timer-elapsed').textContent = formatDuration(elapsed);
+
+  // Update stages
+  const elapsedHours = elapsed / 3600000;
+  updateStages(elapsedHours);
+  updateYouAreHere(elapsedHours);
+
+  // Check completion
+  if (remaining <= 0 && !state.completed) {
+    state.completed = true;
+    clearInterval(state.timerInterval);
+    showCelebration(elapsed);
+  }
+}
+
+function togglePause() {
+  if (state.isPaused) {
+    // Resume
+    state.totalPausedMs += Date.now() - state.pauseStart;
+    state.isPaused = false;
+    document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
+    document.getElementById('btn-pause').className = 'btn btn-secondary';
+  } else {
+    // Pause
+    state.pauseStart = Date.now();
+    state.isPaused = true;
+    document.getElementById('btn-pause').innerHTML = '▶️ Resume';
+    document.getElementById('btn-pause').className = 'btn btn-success';
+  }
+}
+
+function showBreakModal() {
+  document.getElementById('break-modal').classList.add('show');
+}
+function hideBreakModal() {
+  document.getElementById('break-modal').classList.remove('show');
+}
+function breakFast() {
+  hideBreakModal();
+  clearInterval(state.timerInterval);
+  const elapsed = Date.now() - state.startTime - state.totalPausedMs;
+  showCelebration(elapsed);
+}
+
+// STAGES
+function buildStages() {
+  const list = document.getElementById('stages-list');
+  list.innerHTML = '';
+  const relevantStages = STAGES.filter(s => s.startH < state.selectedHours);
+  relevantStages.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'stage-item';
+    div.dataset.startH = s.startH;
+    div.dataset.endH = s.endH;
+    div.innerHTML = `
+      <div class="stage-icon">${s.icon}</div>
+      <div class="stage-text">
+        <div class="stage-name">${s.name}</div>
+        <div class="stage-time">${s.range}</div>
+        <div class="stage-desc">${s.desc}</div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function updateStages(elapsedH) {
+  document.querySelectorAll('.stage-item').forEach(item => {
+    const startH = parseFloat(item.dataset.startH);
+    const endH = parseFloat(item.dataset.endH);
+    item.classList.remove('completed', 'current');
+    if (elapsedH >= endH) {
+      item.classList.add('completed');
+      item.querySelector('.stage-icon').innerHTML = '✓';
+    } else if (elapsedH >= startH) {
+      item.classList.add('current');
+    }
+  });
+}
+
+// CYCLE CHART
+function toggleCycleInfo(idx) {
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('cycle-info-' + i);
+    if (i === idx) {
+      el.classList.toggle('show');
+    } else {
+      el.classList.remove('show');
+    }
+  }
+}
+
+function updateYouAreHere(elapsedH) {
+  const marker = document.getElementById('you-are-here-marker');
+  if (elapsedH > 24) elapsedH = 24;
+  const pct = (elapsedH / 24) * 100;
+  marker.style.display = 'block';
+  marker.style.left = pct + '%';
+}
+
+// CELEBRATION
+function showCelebration(elapsedMs) {
+  const hrs = Math.floor(elapsedMs / 3600000);
+  const mins = Math.floor((elapsedMs % 3600000) / 60000);
+  document.getElementById('sum-duration').textContent = hrs + 'h ' + mins + 'm';
+  document.getElementById('sum-goal').textContent = state.selectedHours + 'h';
+  document.getElementById('sum-start').textContent = formatTime(new Date(state.startTime));
+  document.getElementById('sum-end').textContent = formatTime(new Date());
+
+  const tips = [
+    'Start with warm water or bone broth, then ease into a light meal after 15-30 minutes.',
+    'Avoid sugary foods when breaking your fast — opt for protein and healthy fats instead.',
+    'Chew your food slowly and mindfully to help your digestive system readjust.',
+    'Stay hydrated! Drink water throughout your eating window.',
+    'Consider keeping a fasting journal to track how you feel over time.'
+  ];
+  document.getElementById('post-fast-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
+
+  showScreen('screen-celebration');
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const container = document.getElementById('confetti-container');
+  container.innerHTML = '';
+  const colors = ['#FF6B6B', '#FECA57', '#48C774', '#3B82F6', '#8B5CF6', '#FB923C', '#F59E0B'];
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 8 + 6) + 'px';
+    piece.style.height = (Math.random() * 8 + 6) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    piece.style.animationDelay = (Math.random() * 1.5) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => { container.innerHTML = ''; }, 5000);
+}
+
+function resetApp() {
+  clearInterval(state.timerInterval);
+  state = {
+    selectedPlan: null, selectedHours: 0, startTime: null, endTime: null,
+    totalMs: 0, timerInterval: null, isPaused: false, pausedElapsed: 0,
+    pauseStart: null, totalPausedMs: 0, completed: false
+  };
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('custom-input').classList.remove('show');
+  document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
+  document.getElementById('timer-percent').textContent = '0%';
+  document.getElementById('timer-countdown').textContent = '00:00:00';
+  document.getElementById('timer-elapsed').textContent = '00:00:00';
+  document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
+  document.getElementById('btn-pause').className = 'btn btn-secondary';
+  showScreen('screen-plan');
+}
+
+// ACCORDION
+function toggleAccordion(item) {
+  const wasOpen = item.classList.contains('open');
+  item.closest('.card').querySelectorAll('.accordion-item').forEach(a => a.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+// HELPERS
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDuration(ms) {
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+// ===== BOTTOM NAV TAB SWITCHING =====
+let currentTab = 'timer';
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('nav-' + tab).classList.add('active');
+  
+  if (tab === 'timer') {
+    // Show timer-related screens based on state
+    if (state.completed) {
+      showScreen('screen-celebration');
+    } else if (state.startTime && !state.completed) {
+      showScreen('screen-timer');
+    } else {
+      showScreen('screen-plan');
+    }
+  } else if (tab === 'cycle') {
+    showScreen('screen-timer');
+    // Scroll to cycle chart
+    setTimeout(() => {
+      const cycleCard = document.getElementById('cycle-bar');
+      if (cycleCard) cycleCard.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  } else if (tab === 'weight') {
+    showScreen('screen-weight');
+    loadWeightData();
+  } else if (tab === 'tips') {
+    showScreen('screen-timer');
+    // Scroll to breaking fast guide
+    setTimeout(() => {
+      const tipsCards = document.querySelectorAll('#screen-timer .card');
+      const tipsCard = tipsCards[tipsCards.length - 1];
+      if (tipsCard) tipsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+}
+
+// ===== WEIGHT TRACKER =====
+let weightUnit = 'lbs';
+let weightEntries = [];
+
+function setUnit(unit) {
+  weightUnit = unit;
+  document.getElementById('btn-lbs').classList.toggle('active', unit === 'lbs');
+  document.getElementById('btn-kg').classList.toggle('active', unit === 'kg');
+  document.getElementById('bmi-weight-label').textContent = 'Weight (' + unit + ')';
+  loadWeightData();
+}
+
+function getWeightEntries() {
+  try {
+    const data = localStorage.getItem('fasttrack_weights');
+    return data ? JSON.parse(data) : [];
+  } catch(e) { return []; }
+}
+
+function saveWeightEntries(entries) {
+  localStorage.setItem('fasttrack_weights', JSON.stringify(entries));
+}
+
+function getGoalWeight() {
+  try { return parseFloat(localStorage.getItem('fasttrack_goal')) || 0; } catch(e) { return 0; }
+}
+
+function saveWeight() {
+  const weightVal = parseFloat(document.getElementById('weight-input').value);
+  const goalVal = parseFloat(document.getElementById('goal-input').value);
+  
+  if (!weightVal || weightVal <= 0) {
+    alert('Please enter a valid weight!');
+    return;
+  }
+  
+  const entry = {
+    date: new Date().toISOString(),
+    weight: weightVal,
+    unit: weightUnit
+  };
+  
+  const entries = getWeightEntries();
+  entries.push(entry);
+  saveWeightEntries(entries);
+  
+  if (goalVal > 0) {
+    localStorage.setItem('fasttrack_goal', goalVal);
+  }
+  
+  document.getElementById('weight-input').value = '';
+  // Auto-fill BMI weight
+  document.getElementById('bmi-weight').value = weightVal;
+  
+  loadWeightData();
+}
+
+function deleteWeightEntry(idx) {
+  const entries = getWeightEntries();
+  entries.splice(idx, 1);
+  saveWeightEntries(entries);
+  loadWeightData();
+}
+
+function convertWeight(val, fromUnit, toUnit) {
+  if (fromUnit === toUnit) return val;
+  if (fromUnit === 'lbs' && toUnit === 'kg') return val * 0.453592;
+  if (fromUnit === 'kg' && toUnit === 'lbs') return val / 0.453592;
+  return val;
+}
+
+function loadWeightData() {
+  const entries = getWeightEntries();
+  const goal = getGoalWeight();
+  
+  if (goal > 0) {
+    document.getElementById('goal-input').value = goal;
+  }
+  
+  // Convert all entries to current unit
+  const converted = entries.map(e => ({
+    date: e.date,
+    weight: Math.round(convertWeight(e.weight, e.unit, weightUnit) * 10) / 10
+  }));
+  
+  // Stats
+  const unitLabel = weightUnit;
+  if (converted.length > 0) {
+    const current = converted[converted.length - 1].weight;
+    const start = converted[0].weight;
+    const change = current - start;
+    const changeSign = change >= 0 ? '+' : '';
+    const changeColor = change <= 0 ? 'var(--green)' : 'var(--coral)';
+    
+    document.getElementById('ws-current').textContent = current + ' ' + unitLabel;
+    document.getElementById('ws-start').textContent = start + ' ' + unitLabel;
+    document.getElementById('ws-change').innerHTML = '<span style="color:' + changeColor + '">' + changeSign + change.toFixed(1) + '</span>';
+  } else {
+    document.getElementById('ws-current').textContent = '--';
+    document.getElementById('ws-start').textContent = '--';
+    document.getElementById('ws-change').textContent = '--';
+  }
+  
+  // Chart
+  drawWeightChart(converted);
+  
+  // Entries list (most recent first, max 10)
+  const listEl = document.getElementById('weight-entries');
+  const recent = converted.slice().reverse().slice(0, 10);
+  if (recent.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;color:var(--gray);padding:20px;font-size:13px;">No entries yet. Log your first weight above! 📝</div>';
+  } else {
+    listEl.innerHTML = recent.map((e, i) => {
+      const realIdx = entries.length - 1 - i;
+      const d = new Date(e.date);
+      const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return '<div class="weight-entry"><span class="we-date">' + dateStr + '</span><span class="we-val">' + e.weight + ' ' + unitLabel + '</span><button class="we-del" onclick="deleteWeightEntry(' + realIdx + ')">✕</button></div>';
+    }).join('');
+  }
+}
+
+function drawWeightChart(data) {
+  const svg = document.getElementById('weight-chart');
+  if (data.length < 2) {
+    svg.innerHTML = '<text x="200" y="75" text-anchor="middle" fill="#94A3B8" font-size="13" font-family="Inter">Log 2+ entries to see your chart 📈</text>';
+    return;
+  }
+  
+  const last20 = data.slice(-20);
+  const weights = last20.map(d => d.weight);
+  const minW = Math.min(...weights) - 2;
+  const maxW = Math.max(...weights) + 2;
+  const rangeW = maxW - minW || 1;
+  
+  const padL = 40, padR = 10, padT = 15, padB = 25;
+  const chartW = 400 - padL - padR;
+  const chartH = 140 - padT - padB;
+  
+  const points = last20.map((d, i) => {
+    const x = padL + (i / (last20.length - 1)) * chartW;
+    const y = padT + (1 - (d.weight - minW) / rangeW) * chartH;
+    return { x, y, weight: d.weight, date: new Date(d.date) };
+  });
+  
+  // Build path
+  const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+  
+  // Gradient fill
+  const fillD = pathD + ' L' + points[points.length-1].x.toFixed(1) + ',' + (padT + chartH) + ' L' + points[0].x.toFixed(1) + ',' + (padT + chartH) + ' Z';
+  
+  let html = '<defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.3"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.02"/></linearGradient></defs>';
+  
+  // Grid lines
+  for (let i = 0; i <= 3; i++) {
+    const y = padT + (i / 3) * chartH;
+    const label = (maxW - (i / 3) * rangeW).toFixed(0);
+    html += '<line x1="' + padL + '" y1="' + y + '" x2="' + (400-padR) + '" y2="' + y + '" stroke="#E2E8F0" stroke-width="0.5"/>';
+    html += '<text x="' + (padL - 5) + '" y="' + (y + 4) + '" text-anchor="end" fill="#94A3B8" font-size="10">' + label + '</text>';
+  }
+  
+  // Fill + Line
+  html += '<path d="' + fillD + '" fill="url(#chartGrad)"/>';
+  html += '<path d="' + pathD + '" fill="none" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  
+  // Dots
+  points.forEach(p => {
+    html += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="#8B5CF6" stroke="white" stroke-width="2"/>';
+  });
+  
+  // Goal line
+  const goal = getGoalWeight();
+  if (goal > 0 && goal >= minW && goal <= maxW) {
+    const goalY = padT + (1 - (goal - minW) / rangeW) * chartH;
+    html += '<line x1="' + padL + '" y1="' + goalY + '" x2="' + (400-padR) + '" y2="' + goalY + '" stroke="#48C774" stroke-width="1.5" stroke-dasharray="6,4"/>';
+    html += '<text x="' + (400-padR) + '" y="' + (goalY - 5) + '" text-anchor="end" fill="#48C774" font-size="10" font-weight="600">Goal</text>';
+  }
+  
+  svg.innerHTML = html;
+}
+
+// ===== BMI CALCULATOR =====
+function calculateBMI() {
+  const feet = parseInt(document.getElementById('bmi-feet').value) || 0;
+  const inches = parseInt(document.getElementById('bmi-inches').value) || 0;
+  let weight = parseFloat(document.getElementById('bmi-weight').value) || 0;
+  
+  if (feet <= 0 || weight <= 0) {
+    alert('Please enter your height and weight!');
+    return;
+  }
+  
+  const totalInches = (feet * 12) + inches;
+  // Convert to kg if in lbs
+  const weightKg = weightUnit === 'lbs' ? weight * 0.453592 : weight;
+  // Convert inches to meters
+  const heightM = totalInches * 0.0254;
+  
+  const bmi = weightKg / (heightM * heightM);
+  const bmiRounded = Math.round(bmi * 10) / 10;
+  
+  document.getElementById('bmi-number').textContent = bmiRounded;
+  document.getElementById('bmi-result-area').style.display = 'block';
+  
+  // Category + color + tip
+  let category, color, bgColor, tip;
+  if (bmi < 18.5) {
+    category = '🔵 Underweight';
+    color = '#3B82F6';
+    bgColor = 'rgba(59,130,246,0.1)';
+    tip = 'You may want to focus on nutrient-dense foods and consult a healthcare provider. Consider shorter fasting windows (12h) and ensure adequate calorie intake during eating windows.';
+  } else if (bmi < 25) {
+    category = '🟢 Normal Weight';
+    color = '#48C774';
+    bgColor = 'rgba(72,199,116,0.1)';
+    tip = 'Great job! You\'re in a healthy range. Intermittent fasting can help maintain your weight and boost cellular health. A 16:8 plan works great for maintenance.';
+  } else if (bmi < 30) {
+    category = '🟡 Overweight';
+    color = '#F59E0B';
+    bgColor = 'rgba(245,158,11,0.1)';
+    tip = 'Intermittent fasting can be very effective for weight management. Consider starting with 16:8 and gradually increasing. Focus on whole foods during eating windows.';
+  } else {
+    category = '🔴 Obese';
+    color = '#FF6B6B';
+    bgColor = 'rgba(255,107,107,0.1)';
+    tip = 'Consult your healthcare provider before starting a fasting program. Start with 12:12 and build up gradually. Focus on sustainable habits and nutrient-rich meals.';
+  }
+  
+  document.getElementById('bmi-category').textContent = category;
+  document.getElementById('bmi-category').style.color = color;
+  document.getElementById('bmi-number').style.color = color;
+  document.getElementById('bmi-result-box').style.background = bgColor;
+  document.getElementById('bmi-tip').textContent = tip;
+  
+  // Gauge marker position (BMI 15-40 range mapped to 0-100%)
+  const markerPct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
+  document.getElementById('bmi-marker').style.left = markerPct + '%';
+}
+
+// ===== INIT =====
+// Load weight data on startup
+loadWeightData();
+</script>
+</body>
+</html>
