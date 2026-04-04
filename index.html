@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.29</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.30</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1818,21 +1818,36 @@ const BADGES = [
   { count: 100, icon: '🌟', name: 'Century', msg: '100 fasts! You\'re a fasting master!' }
 ];
 
+function cleanupDuplicateWeights() {
+  const entries = getWeightEntries();
+  if (entries.length === 0) return;
+  const byDay = {};
+  entries.forEach(e => {
+    const day = new Date(e.date).toDateString();
+    if (!byDay[day] || new Date(e.date) > new Date(byDay[day].date)) {
+      byDay[day] = e;
+    }
+  });
+  const cleaned = Object.values(byDay).sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (cleaned.length !== entries.length) {
+    saveWeightEntries(cleaned);
+  }
+}
+
 function cleanupDuplicateFasts() {
   const history = getFastHistory();
   if (history.length === 0) return;
-  // Keep only the latest entry per start date
-  const byDate = {};
+  // One entry per calendar day — keep the latest entry per day
+  const byDay = {};
   history.forEach(h => {
-    const startDate = h.startTime ? new Date(h.startTime).toDateString() : new Date(h.date).toDateString();
-    if (!byDate[startDate] || new Date(h.date) > new Date(byDate[startDate].date)) {
-      byDate[startDate] = h;
+    // Check by start date
+    const day1 = h.startTime ? new Date(h.startTime).toDateString() : new Date(h.date).toDateString();
+    if (!byDay[day1] || new Date(h.date) > new Date(byDay[day1].date)) {
+      byDay[day1] = h;
     }
   });
-  const cleaned = Object.values(byDate).sort((a, b) => new Date(a.date) - new Date(b.date));
-  if (cleaned.length !== history.length) {
-    localStorage.setItem('fasttrack_history', JSON.stringify(cleaned));
-  }
+  const cleaned = Object.values(byDay).sort((a, b) => new Date(a.date) - new Date(b.date));
+  localStorage.setItem('fasttrack_history', JSON.stringify(cleaned));
 }
 
 function getFastHistory() {
@@ -2327,6 +2342,7 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 cleanupDuplicateFasts();
+cleanupDuplicateWeights();
 loadWeightData();
 renderWater();
 loadAvatar();
