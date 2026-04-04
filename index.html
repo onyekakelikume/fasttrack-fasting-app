@@ -824,6 +824,28 @@ FEATURES:
   </div>
 </div>
 
+<!-- EDIT TIME MODAL -->
+<div class="modal-overlay" id="edit-time-modal">
+  <div class="modal-box">
+    <h3>🕐 Edit Start Time</h3>
+    <p>Select when you started fasting</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="flex:1;">
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Date</label>
+        <input type="date" id="edit-date-input" style="width:100%;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+      </div>
+      <div style="flex:1;">
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Time</label>
+        <input type="time" id="edit-time-input" style="width:100%;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="cancelEditTime()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="applyEditTime()">✅ Apply</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFETTI -->
 <div class="confetti-container" id="confetti-container"></div>
 
@@ -1022,29 +1044,42 @@ function breakFast() {
 
 // EDIT START TIME (during active fast)
 function editStartTime() {
+  document.getElementById('edit-time-modal').classList.add('show');
   const currentStart = new Date(state.startTime);
-  const newTime = prompt('Enter new start time (HH:MM, 24hr format):', 
-    currentStart.getHours().toString().padStart(2,'0') + ':' + currentStart.getMinutes().toString().padStart(2,'0'));
-  
-  if (newTime && newTime.match(/^\d{1,2}:\d{2}$/)) {
+  document.getElementById('edit-time-input').value = 
+    currentStart.getHours().toString().padStart(2,'0') + ':' + currentStart.getMinutes().toString().padStart(2,'0');
+  // Default date to the start date
+  const y = currentStart.getFullYear();
+  const m = (currentStart.getMonth()+1).toString().padStart(2,'0');
+  const d = currentStart.getDate().toString().padStart(2,'0');
+  document.getElementById('edit-date-input').value = y + '-' + m + '-' + d;
+}
+function applyEditTime() {
+  const newTime = document.getElementById('edit-time-input').value;
+  const newDate = document.getElementById('edit-date-input').value;
+  if (newTime) {
     const [hh, mm] = newTime.split(':').map(Number);
-    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
-      const newStart = new Date(state.startTime);
-      newStart.setHours(hh, mm, 0, 0);
-      // If the new time is in the future, assume yesterday
-      if (newStart.getTime() > Date.now()) {
-        newStart.setDate(newStart.getDate() - 1);
-      }
-      state.startTime = newStart.getTime();
-      state.endTime = state.startTime + state.totalMs;
-      state.totalPausedMs = 0;
-      document.getElementById('timer-start').textContent = formatTime(new Date(state.startTime));
-      document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
-      updateTimer();
+    let newStart;
+    if (newDate) {
+      newStart = new Date(newDate + 'T' + newTime);
     } else {
-      alert('Please enter a valid time (0-23 hours, 0-59 minutes)');
+      newStart = new Date();
+      newStart.setHours(hh, mm, 0, 0);
     }
+    if (newStart.getTime() > Date.now()) {
+      newStart.setDate(newStart.getDate() - 1);
+    }
+    state.startTime = newStart.getTime();
+    state.endTime = state.startTime + state.totalMs;
+    state.totalPausedMs = 0;
+    document.getElementById('timer-start').textContent = formatTime(new Date(state.startTime));
+    document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
+    updateTimer();
   }
+  document.getElementById('edit-time-modal').classList.remove('show');
+}
+function cancelEditTime() {
+  document.getElementById('edit-time-modal').classList.remove('show');
 }
 
 // STAGES
