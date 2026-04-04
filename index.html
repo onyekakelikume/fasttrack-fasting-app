@@ -634,8 +634,8 @@ FEATURES:
           <div class="label">Started ✏️</div>
           <div class="value" id="timer-start">--:--</div>
         </div>
-        <div class="timer-info-box">
-          <div class="label">Ends</div>
+        <div class="timer-info-box" style="cursor:pointer;" onclick="editEndTime()">
+          <div class="label">Ends ✏️</div>
           <div class="value" id="timer-end">--:--</div>
         </div>
       </div>
@@ -842,6 +842,28 @@ FEATURES:
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="cancelEditTime()">Cancel</button>
       <button class="btn btn-primary" style="width:auto;" onclick="applyEditTime()">✅ Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT END TIME MODAL -->
+<div class="modal-overlay" id="edit-end-modal">
+  <div class="modal-box">
+    <h3>🏁 Edit End Time</h3>
+    <p>Select when you want to stop fasting</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <div style="flex:1;">
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Date</label>
+        <input type="date" id="edit-end-date" style="width:100%;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+      </div>
+      <div style="flex:1;">
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Time</label>
+        <input type="time" id="edit-end-time" style="width:100%;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="cancelEditEnd()">Cancel</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="applyEditEnd()">✅ Apply</button>
     </div>
   </div>
 </div>
@@ -1080,6 +1102,48 @@ function applyEditTime() {
 }
 function cancelEditTime() {
   document.getElementById('edit-time-modal').classList.remove('show');
+}
+
+// EDIT END TIME (during active fast)
+function editEndTime() {
+  document.getElementById('edit-end-modal').classList.add('show');
+  const currentEnd = new Date(state.endTime);
+  document.getElementById('edit-end-time').value = 
+    currentEnd.getHours().toString().padStart(2,'0') + ':' + currentEnd.getMinutes().toString().padStart(2,'0');
+  const y = currentEnd.getFullYear();
+  const m = (currentEnd.getMonth()+1).toString().padStart(2,'0');
+  const d = currentEnd.getDate().toString().padStart(2,'0');
+  document.getElementById('edit-end-date').value = y + '-' + m + '-' + d;
+}
+function applyEditEnd() {
+  const newTime = document.getElementById('edit-end-time').value;
+  const newDate = document.getElementById('edit-end-date').value;
+  if (newTime) {
+    let newEnd;
+    if (newDate) {
+      newEnd = new Date(newDate + 'T' + newTime);
+    } else {
+      newEnd = new Date();
+      const [hh, mm] = newTime.split(':').map(Number);
+      newEnd.setHours(hh, mm, 0, 0);
+    }
+    if (newEnd.getTime() <= state.startTime) {
+      alert('End time must be after start time!');
+      return;
+    }
+    state.endTime = newEnd.getTime();
+    state.totalMs = state.endTime - state.startTime;
+    const goalHrs = Math.round((state.totalMs / 3600000) * 10) / 10;
+    state.selectedHours = goalHrs;
+    document.getElementById('timer-goal').textContent = Math.floor(goalHrs) + 'h ' + Math.round((goalHrs % 1) * 60) + 'm';
+    document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
+    buildStages();
+    updateTimer();
+  }
+  document.getElementById('edit-end-modal').classList.remove('show');
+}
+function cancelEditEnd() {
+  document.getElementById('edit-end-modal').classList.remove('show');
 }
 
 // STAGES
