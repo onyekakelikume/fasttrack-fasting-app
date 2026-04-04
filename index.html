@@ -88,9 +88,14 @@ header p {
   background: var(--white);
 }
 .plan-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-.plan-card.selected { border-width: 3px; transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.12); background: linear-gradient(135deg, rgba(255,107,107,0.04), rgba(139,92,246,0.04)); }
+.plan-card.selected { border-width: 3px; transform: translateY(-4px) scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 .plan-card.selected .plan-hours { font-size: 32px; }
 .plan-card.selected .plan-name { font-weight: 800; }
+.plan-card.selected[data-border="coral"] { background: #FFF0F0; }
+.plan-card.selected[data-border="yellow"] { background: #FFFBEB; }
+.plan-card.selected[data-border="blue"] { background: #EFF6FF; }
+.plan-card.selected[data-border="purple"] { background: #F5F3FF; }
+.plan-card.selected[data-border="green"] { background: #F0FDF4; }
 .plan-card[data-border="coral"] { border-color: var(--coral); }
 .plan-card[data-border="yellow"] { border-color: var(--yellow); }
 .plan-card[data-border="blue"] { border-color: var(--blue); }
