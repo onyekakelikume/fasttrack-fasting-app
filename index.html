@@ -1888,8 +1888,11 @@ function toggleDarkMode() {
   localStorage.setItem('fasttrack_dark', isDark ? '1' : '0');
   document.getElementById('dark-toggle').textContent = isDark ? '☀️' : '🌙';
 }
-// Load dark mode preference
-if (localStorage.getItem('fasttrack_dark') === '1') {
+// Load dark mode preference — auto dark after 6pm, auto light before 6pm
+const manualDark = localStorage.getItem('fasttrack_dark');
+const hour = new Date().getHours();
+const autoDark = hour >= 18 || hour < 6;
+if (manualDark === '1' || (manualDark === null && autoDark)) {
   document.body.classList.add('dark');
   document.getElementById('dark-toggle').textContent = '☀️';
 }
