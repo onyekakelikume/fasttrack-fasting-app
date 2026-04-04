@@ -1810,7 +1810,7 @@ function getFastHistory() {
 function saveFastHistory(elapsedMs) {
   const history = getFastHistory();
   const hrs = Math.round((elapsedMs / 3600000) * 10) / 10;
-  const today = new Date().toDateString();
+  const startDate = new Date(state.startTime).toDateString();
   const newEntry = {
     date: new Date().toISOString(),
     startTime: state.startTime,
@@ -1819,10 +1819,13 @@ function saveFastHistory(elapsedMs) {
     goal: state.selectedHours,
     completed: state.completed || elapsedMs >= state.totalMs
   };
-  // Check if there's already a fast for today — override it
-  const todayIdx = history.findIndex(h => new Date(h.date).toDateString() === today);
-  if (todayIdx >= 0) {
-    history[todayIdx] = newEntry;
+  // Check if there's already a fast that started on the same day — override it
+  const existingIdx = history.findIndex(h => {
+    const hStart = h.startTime ? new Date(h.startTime).toDateString() : new Date(h.date).toDateString();
+    return hStart === startDate;
+  });
+  if (existingIdx >= 0) {
+    history[existingIdx] = newEntry;
   } else {
     history.push(newEntry);
   }
