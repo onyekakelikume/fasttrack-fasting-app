@@ -460,8 +460,8 @@ header p {
 /* WEIGHT TRACKER */
 .weight-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .unit-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 2px solid var(--light-gray); }
-.unit-btn { padding: 6px 14px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; background: var(--light-gray); color: var(--gray); transition: all 0.2s; }
-.unit-btn.active { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; }
+.unit-btn { padding: 10px 24px; font-size: 14px; font-weight: 700; border: 2px solid var(--light-gray); cursor: pointer; font-family: inherit; background: var(--light-gray); color: var(--gray); transition: all 0.25s; border-radius: 10px; }
+.unit-btn.active { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; border-color: var(--purple); box-shadow: 0 3px 12px rgba(139,92,246,0.35); transform: scale(1.08); font-size: 15px; }
 .weight-input-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: flex-end; }
 .weight-input-row .input-group { flex: 1; }
 .weight-input-row .input-group label { display: block; font-size: 11px; font-weight: 600; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; }
@@ -512,7 +512,8 @@ body.dark .bmi-tip { background: #334155; color: #94A3B8; }
 body.dark .bmi-labels { color: #94A3B8; }
 body.dark input[type="date"], body.dark input[type="time"], body.dark input[type="number"] { background: #334155; color: #E2E8F0; border-color: #475569; }
 body.dark .custom-input-wrap input { background: #334155; color: #E2E8F0; border-color: var(--green); }
-body.dark .unit-btn { background: #334155; color: #94A3B8; }
+body.dark .unit-btn { background: #334155; color: #94A3B8; border-color: #475569; }
+body.dark .unit-btn.active { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; border-color: var(--purple); }
 body.dark .light-gray, body.dark .accordion-item { border-color: #334155; }
 body.dark header p { color: #64748B; }
 /* WATER TRACKER */
@@ -585,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.15</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.16</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -826,7 +827,7 @@ FEATURES:
           <label>Weight</label>
           <input type="number" id="weight-input" placeholder="170" step="0.1">
         </div>
-        <div class="input-group">
+        <div class="input-group" style="flex:1.5;">
           <label>Goal</label>
           <input type="number" id="goal-input" placeholder="155" step="0.1">
         </div>
