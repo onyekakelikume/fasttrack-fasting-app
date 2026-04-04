@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.31</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.32</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1258,10 +1258,17 @@ function breakFast() {
   } else {
     showBrokenFast(elapsed);
   }
-  // Auto-start feeding window after 3 seconds
+  // Auto-start feeding window after 4 seconds
+  const savedHours = state.selectedHours;
+  const savedPlan = state.selectedPlan;
   setTimeout(function() {
+    state.selectedHours = savedHours;
+    state.selectedPlan = savedPlan;
+    // Clear any existing intervals first
+    if (feedState.feedInterval) clearInterval(feedState.feedInterval);
+    feedState.feedInterval = null;
     startFeedingWindow();
-  }, 3000);
+  }, 4000);
 }
 
 // BROKEN FAST (no celebration)
@@ -2223,6 +2230,7 @@ function startFeedingWindow() {
 }
 
 function updateFeedingTimer() {
+  if (!feedState.feedStart || !feedState.feedDurationMs) return;
   const now = Date.now();
   const elapsed = now - feedState.feedStart;
   const remaining = Math.max(0, feedState.feedDurationMs - elapsed);
