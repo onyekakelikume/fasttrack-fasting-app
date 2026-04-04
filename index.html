@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.25</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.26</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1498,7 +1498,7 @@ function showScreen(id) {
 }
 
 function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function formatDuration(ms) {
@@ -1936,7 +1936,7 @@ function loadFastHistory() {
     recent.forEach(h => {
       const d = new Date(h.date);
       const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       const hrs = Math.floor(h.durationHrs);
       const mins = Math.round((h.durationHrs - hrs) * 60);
       const goalMet = h.completed;
@@ -2178,7 +2178,7 @@ function startFeedingWindow() {
   
   document.getElementById('feed-window').textContent = feedHours + 'h';
   const nextFastTime = new Date(feedState.feedStart + feedState.feedDurationMs);
-  document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   
   showScreen('screen-feeding');
   
@@ -2247,7 +2247,7 @@ function resumeFeedingWindow() {
       const feedHours = getFeedingHours(data.fastPlan);
       document.getElementById('feed-window').textContent = feedHours + 'h';
       const nextFastTime = new Date(data.feedStart + data.feedDurationMs);
-      document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       
       showScreen('screen-feeding');
       if (feedState.feedInterval) clearInterval(feedState.feedInterval);
