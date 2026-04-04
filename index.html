@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.28</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.29</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -808,8 +808,7 @@ FEATURES:
         <div style="font-weight:700;font-size:14px;margin-bottom:6px;">💡 Post-Fast Tip</div>
         <div style="font-size:13px;color:#475569;line-height:1.6;" id="post-fast-tip">Start with warm water or bone broth, then ease into a light meal after 15-30 minutes.</div>
       </div>
-      <button class="btn btn-primary" style="margin-top:16px;" onclick="startFeedingWindow()">🍽️ Start Eating Window</button>
-      <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetApp()">🔄 Skip — Start New Fast</button>
+      <p style="font-size:12px;color:var(--gray);margin-top:16px;">🍽️ Eating window starting automatically...</p>
     </div>
   </div>
 
@@ -953,8 +952,7 @@ FEATURES:
         </div>
       </div>
       <p style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:16px;">💡 Tip: Try a shorter fast next time and build up gradually. Consistency beats perfection!</p>
-      <button class="btn btn-primary" onclick="startFeedingWindow()">🍽️ Start Eating Window</button>
-      <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetApp()">🔄 Try Again Now</button>
+      <p style="font-size:12px;color:var(--gray);margin-top:16px;">🍽️ Eating window starting automatically...</p>
     </div>
   </div>
 
@@ -1254,12 +1252,16 @@ function breakFast() {
   // Save to history — mark complete if goal was met
   state.completed = goalMet;
   saveFastHistory(elapsed);
-  // Show celebration if goal met, encouragement if not
+  // Show brief summary then auto-start feeding window
   if (goalMet) {
     showCelebration(elapsed);
   } else {
     showBrokenFast(elapsed);
   }
+  // Auto-start feeding window after 3 seconds
+  setTimeout(function() {
+    startFeedingWindow();
+  }, 3000);
 }
 
 // BROKEN FAST (no celebration)
@@ -2176,8 +2178,8 @@ let feedState = {
 };
 
 function getFeedingHours(fastingHours) {
-  // Calculate eating window: 24 - fasting hours
-  const feedHrs = 24 - fastingHours;
+  // Calculate eating window: 24 - fasting hours, rounded to clean number
+  const feedHrs = Math.round((24 - fastingHours) * 10) / 10;
   return Math.max(1, Math.min(23, feedHrs));
 }
 
@@ -2193,7 +2195,7 @@ function startFeedingWindow() {
     fastPlan: state.selectedHours
   }));
   
-  document.getElementById('feed-window').textContent = feedHours + 'h';
+  document.getElementById('feed-window').textContent = Math.floor(feedHours) === feedHours ? feedHours + 'h' : feedHours.toFixed(1) + 'h';
   const nextFastTime = new Date(feedState.feedStart + feedState.feedDurationMs);
   document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   
@@ -2262,7 +2264,7 @@ function resumeFeedingWindow() {
       state.selectedHours = data.fastPlan;
       
       const feedHours = getFeedingHours(data.fastPlan);
-      document.getElementById('feed-window').textContent = feedHours + 'h';
+      document.getElementById('feed-window').textContent = Math.floor(feedHours) === feedHours ? feedHours + 'h' : feedHours.toFixed(1) + 'h';
       const nextFastTime = new Date(data.feedStart + data.feedDurationMs);
       document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
       
