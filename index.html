@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.19</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.20</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1165,10 +1165,16 @@ function updateTimer() {
   updateStages(elapsedHours);
   updateYouAreHere(elapsedHours);
 
+  // Color-code timer based on 24h body cycle phase
+  const cycleColor = getCycleColor(elapsedHours);
+  const ring = document.getElementById('progress-ring');
+  ring.setAttribute('stroke', cycleColor);
+  document.getElementById('timer-percent').style.color = cycleColor;
+  document.getElementById('timer-countdown').style.color = cycleColor;
+
   // Goal reached — keep running but show overtime indicator
   if (remaining <= 0 && !state.goalReached) {
     state.goalReached = true;
-    document.getElementById('timer-percent').style.color = 'var(--green)';
   }
   if (remaining <= 0) {
     document.getElementById('timer-percent').textContent = Math.floor(progress * 100) + '%';
@@ -1353,6 +1359,16 @@ function toggleCycleInfo(idx) {
   }
 }
 
+function getCycleColor(elapsedH) {
+  if (elapsedH < 4) return '#FB923C';   // Orange — Blood Sugar Rises
+  if (elapsedH < 8) return '#3B82F6';   // Blue — Blood Sugar Drops
+  if (elapsedH < 12) return '#FF6B6B';  // Coral — Fat Burning
+  if (elapsedH < 16) return '#8B5CF6';  // Purple — Autophagy
+  if (elapsedH < 20) return '#48C774';  // Green — Catabolic
+  if (elapsedH < 24) return '#F59E0B';  // Gold — Deep Renewal
+  return '#F59E0B';                      // Gold — Extended (24h+)
+}
+
 function updateYouAreHere(elapsedH) {
   const marker = document.getElementById('you-are-here-marker');
   if (elapsedH > 24) elapsedH = 24;
@@ -1416,6 +1432,8 @@ function resetApp() {
   document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
   document.getElementById('timer-percent').textContent = '0%';
   document.getElementById('timer-percent').style.color = '';
+  document.getElementById('timer-countdown').style.color = '';
+  document.getElementById('progress-ring').setAttribute('stroke', 'url(#ringGrad)');
   document.getElementById('timer-countdown').textContent = '00:00:00';
   document.getElementById('timer-elapsed').textContent = '00:00:00';
   document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
