@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.23</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.24</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1582,13 +1582,21 @@ function saveWeight() {
   }
   
   if (weightVal && weightVal > 0) {
-    const entry = {
-      date: new Date().toISOString(),
-      weight: weightVal,
-      unit: weightUnit
-    };
+    const today = new Date().toDateString();
     const entries = getWeightEntries();
-    entries.push(entry);
+    // Check if there's already an entry for today — override it
+    const todayIdx = entries.findIndex(e => new Date(e.date).toDateString() === today);
+    if (todayIdx >= 0) {
+      entries[todayIdx].weight = weightVal;
+      entries[todayIdx].unit = weightUnit;
+      entries[todayIdx].date = new Date().toISOString();
+    } else {
+      entries.push({
+        date: new Date().toISOString(),
+        weight: weightVal,
+        unit: weightUnit
+      });
+    }
     saveWeightEntries(entries);
     document.getElementById('weight-input').value = '';
     // Auto-fill BMI weight
@@ -1802,14 +1810,22 @@ function getFastHistory() {
 function saveFastHistory(elapsedMs) {
   const history = getFastHistory();
   const hrs = Math.round((elapsedMs / 3600000) * 10) / 10;
-  history.push({
+  const today = new Date().toDateString();
+  const newEntry = {
     date: new Date().toISOString(),
     startTime: state.startTime,
     durationMs: elapsedMs,
     durationHrs: hrs,
     goal: state.selectedHours,
     completed: state.completed || elapsedMs >= state.totalMs
-  });
+  };
+  // Check if there's already a fast for today — override it
+  const todayIdx = history.findIndex(h => new Date(h.date).toDateString() === today);
+  if (todayIdx >= 0) {
+    history[todayIdx] = newEntry;
+  } else {
+    history.push(newEntry);
+  }
   localStorage.setItem('fasttrack_history', JSON.stringify(history));
 }
 
