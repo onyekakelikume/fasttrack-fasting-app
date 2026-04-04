@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.34</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.35</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1125,6 +1125,8 @@ function selectPlan(el, hours) {
     state.selectedPlan = hours;
     state.selectedHours = hours;
   }
+  // Save selected plan so it persists
+  localStorage.setItem('fasttrack_plan', JSON.stringify({ plan: state.selectedPlan, hours: state.selectedHours }));
 }
 
 document.getElementById('custom-hours').addEventListener('input', function() {
@@ -1132,6 +1134,7 @@ document.getElementById('custom-hours').addEventListener('input', function() {
   if (v < 1) v = 1;
   if (v > 48) v = 48;
   state.selectedHours = v;
+  localStorage.setItem('fasttrack_plan', JSON.stringify({ plan: 'custom', hours: v }));
 });
 
 // START FAST
@@ -2363,6 +2366,29 @@ cleanupDuplicateWeights();
 loadWeightData();
 renderWater();
 loadAvatar();
+
+// Restore saved plan selection
+const savedPlan = localStorage.getItem('fasttrack_plan');
+if (savedPlan) {
+  try {
+    const planData = JSON.parse(savedPlan);
+    state.selectedPlan = planData.plan;
+    state.selectedHours = planData.hours;
+    // Highlight the saved plan card
+    const planCards = document.querySelectorAll('.plan-card');
+    planCards.forEach(card => {
+      const onclick = card.getAttribute('onclick');
+      if (planData.plan === 'custom' && onclick && onclick.includes("'custom'")) {
+        card.classList.add('selected');
+        document.getElementById('custom-input').classList.add('show');
+        document.getElementById('custom-hours').value = planData.hours;
+      } else if (onclick && onclick.includes(', ' + planData.plan + ')')) {
+        card.classList.add('selected');
+      }
+    });
+  } catch(e) {}
+}
+
 // Check if user has set their name
 const savedName = localStorage.getItem('fasttrack_username');
 if (savedName) {
