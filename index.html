@@ -574,6 +574,8 @@ FEATURES:
 
 <div class="app-container">
   <header>
+    <div id="header-avatar" style="width:40px;height:40px;border-radius:50%;background:var(--light-gray);display:none;margin:0 auto 6px;overflow:hidden;border:2px solid var(--purple);cursor:pointer;font-size:20px;align-items:center;justify-content:center;" onclick="document.getElementById('avatar-upload-header').click()">👤</div>
+    <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
     <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume</p>
@@ -587,6 +589,12 @@ FEATURES:
       <h2 style="font-size:24px;font-weight:800;margin:12px 0 6px;background:linear-gradient(135deg,var(--coral),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Welcome to FastTrack!</h2>
       <p style="color:var(--gray);font-size:13px;margin-bottom:20px;">Let's personalize your experience</p>
       <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px;text-transform:uppercase;">Profile Picture</label>
+        <div style="position:relative;width:80px;height:80px;margin:0 auto 12px;">
+          <div id="welcome-avatar" style="width:80px;height:80px;border-radius:50%;background:var(--light-gray);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;border:3px solid var(--purple);cursor:pointer;" onclick="document.getElementById('avatar-upload').click()">👤</div>
+          <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
+          <div style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;cursor:pointer;" onclick="document.getElementById('avatar-upload').click()">📷</div>
+        </div>
         <label style="display:block;font-size:11px;font-weight:600;color:var(--gray);margin-bottom:6px;text-transform:uppercase;">What's your name?</label>
         <input type="text" id="user-name-input" placeholder="Enter your name" style="width:100%;padding:14px;border:2px solid var(--light-gray);border-radius:12px;font-size:18px;font-weight:600;text-align:center;outline:none;font-family:inherit;" maxlength="30">
       </div>
@@ -1965,6 +1973,33 @@ function loadWeeklySummary() {
   el.innerHTML = html;
 }
 
+// ===== PROFILE PICTURE =====
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      localStorage.setItem('fasttrack_avatar', dataUrl);
+      loadAvatar();
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+function loadAvatar() {
+  const avatar = localStorage.getItem('fasttrack_avatar');
+  if (avatar) {
+    // Welcome screen avatar
+    const welcomeEl = document.getElementById('welcome-avatar');
+    if (welcomeEl) welcomeEl.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;">';
+    // Header avatar
+    const headerEl = document.getElementById('header-avatar');
+    if (headerEl) {
+      headerEl.innerHTML = '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;">';
+      headerEl.style.display = 'flex';
+    }
+  }
+}
+
 // ===== USER PERSONALIZATION =====
 function saveUserName() {
   const name = document.getElementById('user-name-input').value.trim();
@@ -1998,6 +2033,7 @@ function updateGreeting() {
 // ===== INIT =====
 loadWeightData();
 renderWater();
+loadAvatar();
 // Check if user has set their name
 const savedName = localStorage.getItem('fasttrack_username');
 if (savedName) {
