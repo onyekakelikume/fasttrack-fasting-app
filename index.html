@@ -630,8 +630,8 @@ FEATURES:
           <div class="label">Goal</div>
           <div class="value" id="timer-goal">16h 0m</div>
         </div>
-        <div class="timer-info-box">
-          <div class="label">Started</div>
+        <div class="timer-info-box" style="cursor:pointer;" onclick="editStartTime()">
+          <div class="label">Started ✏️</div>
           <div class="value" id="timer-start">--:--</div>
         </div>
         <div class="timer-info-box">
@@ -1018,6 +1018,33 @@ function breakFast() {
   clearInterval(state.timerInterval);
   const elapsed = Date.now() - state.startTime - state.totalPausedMs;
   showCelebration(elapsed);
+}
+
+// EDIT START TIME (during active fast)
+function editStartTime() {
+  const currentStart = new Date(state.startTime);
+  const newTime = prompt('Enter new start time (HH:MM, 24hr format):', 
+    currentStart.getHours().toString().padStart(2,'0') + ':' + currentStart.getMinutes().toString().padStart(2,'0'));
+  
+  if (newTime && newTime.match(/^\d{1,2}:\d{2}$/)) {
+    const [hh, mm] = newTime.split(':').map(Number);
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      const newStart = new Date(state.startTime);
+      newStart.setHours(hh, mm, 0, 0);
+      // If the new time is in the future, assume yesterday
+      if (newStart.getTime() > Date.now()) {
+        newStart.setDate(newStart.getDate() - 1);
+      }
+      state.startTime = newStart.getTime();
+      state.endTime = state.startTime + state.totalMs;
+      state.totalPausedMs = 0;
+      document.getElementById('timer-start').textContent = formatTime(new Date(state.startTime));
+      document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
+      updateTimer();
+    } else {
+      alert('Please enter a valid time (0-23 hours, 0-59 minutes)');
+    }
+  }
 }
 
 // STAGES
