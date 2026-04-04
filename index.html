@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.21</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.22</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -808,7 +808,48 @@ FEATURES:
         <div style="font-weight:700;font-size:14px;margin-bottom:6px;">💡 Post-Fast Tip</div>
         <div style="font-size:13px;color:#475569;line-height:1.6;" id="post-fast-tip">Start with warm water or bone broth, then ease into a light meal after 15-30 minutes.</div>
       </div>
-      <button class="btn btn-primary" style="margin-top:16px;" onclick="resetApp()">🔄 Start New Fast</button>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="startFeedingWindow()">🍽️ Start Eating Window</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetApp()">🔄 Skip — Start New Fast</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Feeding Window Countdown -->
+  <div id="screen-feeding" class="screen">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:50px;">🍽️</div>
+      <h2 style="font-size:22px;font-weight:800;margin:8px 0 4px;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Eating Window</h2>
+      <p style="color:var(--gray);font-size:13px;margin-bottom:16px;">Enjoy your meals! Next fast starts when the timer ends.</p>
+      <div class="timer-ring-wrap">
+        <svg width="220" height="220" viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="feedRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#48C774"/>
+              <stop offset="100%" style="stop-color:#3B82F6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="110" cy="110" r="95" fill="none" stroke="#F1F5F9" stroke-width="14"/>
+          <circle id="feed-progress-ring" cx="110" cy="110" r="95" fill="none" stroke="url(#feedRingGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="0" transform="rotate(-90 110 110)"/>
+        </svg>
+        <div class="timer-center">
+          <div class="timer-percent" id="feed-percent" style="color:var(--green);">100%</div>
+          <div class="timer-countdown" id="feed-countdown" style="color:var(--green);">00:00:00</div>
+          <div class="timer-label-small">eating time left</div>
+        </div>
+      </div>
+      <div class="timer-info-row">
+        <div class="timer-info-box">
+          <div class="label">Eating Window</div>
+          <div class="value" id="feed-window">8h</div>
+        </div>
+        <div class="timer-info-box">
+          <div class="label">Next Fast</div>
+          <div class="value" id="feed-next-fast">--:--</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="skipFeedingStartFast()">🚀 Start Fasting Now</button>
+        <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetApp()">✏️ Change Plan</button>
+      </div>
     </div>
   </div>
 
@@ -912,7 +953,8 @@ FEATURES:
         </div>
       </div>
       <p style="font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:16px;">💡 Tip: Try a shorter fast next time and build up gradually. Consistency beats perfection!</p>
-      <button class="btn btn-primary" onclick="resetApp()">🔄 Try Again</button>
+      <button class="btn btn-primary" onclick="startFeedingWindow()">🍽️ Start Eating Window</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetApp()">🔄 Try Again Now</button>
     </div>
   </div>
 
@@ -1477,7 +1519,9 @@ function switchTab(tab) {
   
   if (tab === 'timer') {
     // Show timer-related screens based on state
-    if (state.completed) {
+    if (feedState.feedStart && feedState.feedInterval) {
+      showScreen('screen-feeding');
+    } else if (state.completed) {
       showScreen('screen-celebration');
     } else if (state.startTime && !state.completed) {
       showScreen('screen-timer');
@@ -2075,6 +2119,116 @@ function updateGreeting() {
   }
 }
 
+// ===== FEEDING WINDOW COUNTDOWN =====
+let feedState = {
+  feedStart: null,
+  feedDurationMs: 0,
+  feedInterval: null
+};
+
+function getFeedingHours(fastingHours) {
+  // Calculate eating window: 24 - fasting hours
+  const feedHrs = 24 - fastingHours;
+  return Math.max(1, Math.min(23, feedHrs));
+}
+
+function startFeedingWindow() {
+  const feedHours = getFeedingHours(state.selectedHours);
+  feedState.feedStart = Date.now();
+  feedState.feedDurationMs = feedHours * 3600000;
+  
+  // Save feeding state to localStorage so it survives app close
+  localStorage.setItem('fasttrack_feeding', JSON.stringify({
+    feedStart: feedState.feedStart,
+    feedDurationMs: feedState.feedDurationMs,
+    fastPlan: state.selectedHours
+  }));
+  
+  document.getElementById('feed-window').textContent = feedHours + 'h';
+  const nextFastTime = new Date(feedState.feedStart + feedState.feedDurationMs);
+  document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  showScreen('screen-feeding');
+  
+  if (feedState.feedInterval) clearInterval(feedState.feedInterval);
+  feedState.feedInterval = setInterval(updateFeedingTimer, 1000);
+  updateFeedingTimer();
+}
+
+function updateFeedingTimer() {
+  const now = Date.now();
+  const elapsed = now - feedState.feedStart;
+  const remaining = Math.max(0, feedState.feedDurationMs - elapsed);
+  const progress = Math.min(1, elapsed / feedState.feedDurationMs);
+  
+  // Update ring (counts down — starts full, empties)
+  const circumference = 2 * Math.PI * 95;
+  const offset = circumference * progress;
+  document.getElementById('feed-progress-ring').setAttribute('stroke-dashoffset', offset);
+  
+  // Update text
+  const pctLeft = Math.max(0, Math.floor((1 - progress) * 100));
+  document.getElementById('feed-percent').textContent = pctLeft + '%';
+  document.getElementById('feed-countdown').textContent = formatDuration(remaining);
+  
+  // Change color as time runs out
+  if (pctLeft <= 10) {
+    document.getElementById('feed-percent').style.color = 'var(--coral)';
+    document.getElementById('feed-countdown').style.color = 'var(--coral)';
+  } else if (pctLeft <= 25) {
+    document.getElementById('feed-percent').style.color = 'var(--orange)';
+    document.getElementById('feed-countdown').style.color = 'var(--orange)';
+  } else {
+    document.getElementById('feed-percent').style.color = 'var(--green)';
+    document.getElementById('feed-countdown').style.color = 'var(--green)';
+  }
+  
+  // Feeding window ended
+  if (remaining <= 0) {
+    clearInterval(feedState.feedInterval);
+    localStorage.removeItem('fasttrack_feeding');
+    document.getElementById('feed-countdown').textContent = "Time to fast!";
+    document.getElementById('feed-percent').textContent = '🚀';
+    document.getElementById('feed-percent').style.fontSize = '36px';
+  }
+}
+
+function skipFeedingStartFast() {
+  clearInterval(feedState.feedInterval);
+  localStorage.removeItem('fasttrack_feeding');
+  document.getElementById('feed-percent').style.fontSize = '';
+  resetApp();
+}
+
+function resumeFeedingWindow() {
+  const saved = localStorage.getItem('fasttrack_feeding');
+  if (saved) {
+    const data = JSON.parse(saved);
+    const now = Date.now();
+    const elapsed = now - data.feedStart;
+    // Only resume if feeding window hasn't expired
+    if (elapsed < data.feedDurationMs) {
+      feedState.feedStart = data.feedStart;
+      feedState.feedDurationMs = data.feedDurationMs;
+      state.selectedHours = data.fastPlan;
+      
+      const feedHours = getFeedingHours(data.fastPlan);
+      document.getElementById('feed-window').textContent = feedHours + 'h';
+      const nextFastTime = new Date(data.feedStart + data.feedDurationMs);
+      document.getElementById('feed-next-fast').textContent = nextFastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      showScreen('screen-feeding');
+      if (feedState.feedInterval) clearInterval(feedState.feedInterval);
+      feedState.feedInterval = setInterval(updateFeedingTimer, 1000);
+      updateFeedingTimer();
+      return true;
+    } else {
+      localStorage.removeItem('fasttrack_feeding');
+    }
+  }
+  return false;
+}
+
 // ===== SERVICE WORKER (auto-update) =====
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
@@ -2090,7 +2244,10 @@ loadAvatar();
 const savedName = localStorage.getItem('fasttrack_username');
 if (savedName) {
   updateGreeting();
-  showScreen('screen-plan');
+  // Check for active feeding window first
+  if (!resumeFeedingWindow()) {
+    showScreen('screen-plan');
+  }
 } else {
   showScreen('screen-welcome');
 }
