@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.35</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.36</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1812,6 +1812,39 @@ function calculateBMI() {
   // Gauge marker position (BMI 15-40 range mapped to 0-100%)
   const markerPct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
   document.getElementById('bmi-marker').style.left = markerPct + '%';
+  
+  // Save BMI data to localStorage
+  localStorage.setItem('fasttrack_bmi', JSON.stringify({
+    feet: feet,
+    inches: inches,
+    weight: weight,
+    unit: weightUnit,
+    bmi: bmiRounded,
+    category: category,
+    color: color,
+    bgColor: bgColor,
+    tip: tip,
+    markerPct: markerPct
+  }));
+}
+
+function loadBMIData() {
+  const saved = localStorage.getItem('fasttrack_bmi');
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    document.getElementById('bmi-feet').value = data.feet;
+    document.getElementById('bmi-inches').value = data.inches;
+    document.getElementById('bmi-weight').value = data.weight;
+    document.getElementById('bmi-number').textContent = data.bmi;
+    document.getElementById('bmi-category').textContent = data.category;
+    document.getElementById('bmi-category').style.color = data.color;
+    document.getElementById('bmi-number').style.color = data.color;
+    document.getElementById('bmi-result-box').style.background = data.bgColor;
+    document.getElementById('bmi-tip').textContent = data.tip;
+    document.getElementById('bmi-marker').style.left = data.markerPct + '%';
+    document.getElementById('bmi-result-area').style.display = 'block';
+  } catch(e) {}
 }
 
 // ===== FASTING HISTORY + BADGES =====
@@ -2364,6 +2397,7 @@ if ('serviceWorker' in navigator) {
 cleanupDuplicateFasts();
 cleanupDuplicateWeights();
 loadWeightData();
+loadBMIData();
 renderWater();
 loadAvatar();
 
