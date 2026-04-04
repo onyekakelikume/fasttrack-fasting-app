@@ -580,7 +580,21 @@ FEATURES:
         <input type="number" id="custom-hours" min="1" max="48" value="14" placeholder="14">
         <label>hours (1-48)</label>
       </div>
-      <div style="margin-top:16px;">
+      <div style="margin-top:14px;">
+        <div class="card-title" style="font-size:13px;">🕐 When did you start fasting?</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Date</label>
+            <input type="date" id="start-date" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;outline:none;">
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;font-size:10px;font-weight:600;color:var(--gray);margin-bottom:4px;text-transform:uppercase;">Time</label>
+            <input type="time" id="start-time" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;outline:none;">
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--gray);text-align:center;margin-bottom:10px;">Leave blank to start now</p>
+      </div>
+      <div>
         <button class="btn btn-primary" onclick="startFast()">🚀 Start Fasting</button>
       </div>
     </div>
@@ -911,7 +925,19 @@ function startFast() {
     }
   }
 
-  state.startTime = Date.now();
+  // Check for custom start time
+  const startDateVal = document.getElementById('start-date').value;
+  const startTimeVal = document.getElementById('start-time').value;
+  if (startDateVal && startTimeVal) {
+    state.startTime = new Date(startDateVal + 'T' + startTimeVal).getTime();
+  } else if (startTimeVal) {
+    const today = new Date();
+    const [hh, mm] = startTimeVal.split(':');
+    today.setHours(parseInt(hh), parseInt(mm), 0, 0);
+    state.startTime = today.getTime();
+  } else {
+    state.startTime = Date.now();
+  }
   state.totalMs = state.selectedHours * 3600000;
   state.endTime = state.startTime + state.totalMs;
   state.isPaused = false;
@@ -1099,6 +1125,8 @@ function resetApp() {
   };
   document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('custom-input').classList.remove('show');
+  document.getElementById('start-date').value = '';
+  document.getElementById('start-time').value = '';
   document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
   document.getElementById('timer-percent').textContent = '0%';
   document.getElementById('timer-countdown').textContent = '00:00:00';
