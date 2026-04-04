@@ -2030,6 +2030,13 @@ function updateGreeting() {
   }
 }
 
+// ===== SERVICE WORKER (auto-update) =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => { reg.installing.addEventListener('statechange', function() { if (this.state === 'activated') location.reload(); }); });
+  });
+}
+
 // ===== INIT =====
 loadWeightData();
 renderWater();
