@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.30</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.31</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -830,7 +830,7 @@ FEATURES:
           <circle id="feed-progress-ring" cx="110" cy="110" r="95" fill="none" stroke="url(#feedRingGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="0" transform="rotate(-90 110 110)"/>
         </svg>
         <div class="timer-center">
-          <div class="timer-percent" id="feed-percent" style="color:var(--green);">100%</div>
+          <div class="timer-percent" id="feed-percent" style="color:var(--green);background:none;-webkit-background-clip:unset;-webkit-text-fill-color:var(--green);background-clip:unset;">100%</div>
           <div class="timer-countdown" id="feed-countdown" style="color:var(--green);">00:00:00</div>
           <div class="timer-label-small">eating time left</div>
         </div>
@@ -2199,7 +2199,8 @@ function getFeedingHours(fastingHours) {
 }
 
 function startFeedingWindow() {
-  const feedHours = getFeedingHours(state.selectedHours);
+  const fastHrs = state.selectedHours || 16;
+  const feedHours = getFeedingHours(fastHrs);
   feedState.feedStart = Date.now();
   feedState.feedDurationMs = feedHours * 3600000;
   
@@ -2238,24 +2239,31 @@ function updateFeedingTimer() {
   document.getElementById('feed-countdown').textContent = formatFriendly(remaining);
   
   // Change color as time runs out
+  const feedPct = document.getElementById('feed-percent');
+  const feedCd = document.getElementById('feed-countdown');
   if (pctLeft <= 10) {
-    document.getElementById('feed-percent').style.color = 'var(--coral)';
-    document.getElementById('feed-countdown').style.color = 'var(--coral)';
+    feedPct.style.color = 'var(--coral)';
+    feedPct.style.webkitTextFillColor = 'var(--coral)';
+    feedCd.style.color = 'var(--coral)';
   } else if (pctLeft <= 25) {
-    document.getElementById('feed-percent').style.color = 'var(--orange)';
-    document.getElementById('feed-countdown').style.color = 'var(--orange)';
+    feedPct.style.color = 'var(--orange)';
+    feedPct.style.webkitTextFillColor = 'var(--orange)';
+    feedCd.style.color = 'var(--orange)';
   } else {
-    document.getElementById('feed-percent').style.color = 'var(--green)';
-    document.getElementById('feed-countdown').style.color = 'var(--green)';
+    feedPct.style.color = 'var(--green)';
+    feedPct.style.webkitTextFillColor = 'var(--green)';
+    feedCd.style.color = 'var(--green)';
   }
   
   // Feeding window ended
   if (remaining <= 0) {
     clearInterval(feedState.feedInterval);
     localStorage.removeItem('fasttrack_feeding');
-    document.getElementById('feed-countdown').textContent = "Time to fast!";
-    document.getElementById('feed-percent').textContent = '🚀';
-    document.getElementById('feed-percent').style.fontSize = '36px';
+    feedCd.textContent = "Time to fast!";
+    feedPct.textContent = '🚀';
+    feedPct.style.fontSize = '36px';
+    feedPct.style.webkitTextFillColor = 'var(--coral)';
+    feedCd.style.color = 'var(--coral)';
   }
 }
 
