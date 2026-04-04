@@ -164,8 +164,8 @@ header p {
   color: white;
 }
 /* SCREENS */
-.screen { display: none; }
-.screen.active { display: block; }
+.screen { display: none; opacity: 0; transition: opacity 0.25s ease; }
+.screen.active { display: block; opacity: 1; }
 /* TIMER SCREEN */
 .timer-ring-wrap {
   display: flex;
@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.27</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.28</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -2276,6 +2276,44 @@ function resumeFeedingWindow() {
     }
   }
   return false;
+}
+
+// ===== SWIPE NAVIGATION =====
+const tabs = ['timer', 'cycle', 'weight', 'history'];
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+document.addEventListener('touchstart', function(e) {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  // Only trigger if horizontal swipe is bigger than vertical (not scrolling)
+  if (Math.abs(diffX) < 60 || Math.abs(diffX) < Math.abs(diffY)) return;
+  
+  const currentIdx = tabs.indexOf(currentTab);
+  if (currentIdx === -1) return;
+  
+  if (diffX < 0) {
+    // Swipe LEFT → next tab
+    const nextIdx = currentIdx + 1;
+    if (nextIdx < tabs.length) switchTab(tabs[nextIdx]);
+  } else {
+    // Swipe RIGHT → previous tab
+    const prevIdx = currentIdx - 1;
+    if (prevIdx >= 0) switchTab(tabs[prevIdx]);
+  }
 }
 
 // ===== SERVICE WORKER (auto-update) =====
