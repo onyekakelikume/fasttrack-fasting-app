@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.18</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.19</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -707,7 +707,7 @@ FEATURES:
       </div>
       <div class="timer-btns">
         <button class="btn btn-secondary" id="btn-pause" onclick="togglePause()">⏸️ Pause</button>
-        <button class="btn btn-danger" onclick="showBreakModal()">🍽️ Break Fast</button>
+        <button class="btn btn-danger" onclick="showBreakModal()">🛑 Stop Fast</button>
       </div>
     </div>
 
@@ -952,11 +952,11 @@ FEATURES:
 <!-- MODAL -->
 <div class="modal-overlay" id="break-modal">
   <div class="modal-box">
-    <h3>🍽️ Break Your Fast?</h3>
-    <p>Are you sure you want to end your fast early? Your progress will be saved.</p>
+    <h3>🛑 Stop Your Fast?</h3>
+    <p>Are you sure you want to end your fast? Your progress will be saved.</p>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="hideBreakModal()">Cancel</button>
-      <button class="btn btn-danger" onclick="breakFast()">Yes, Break Fast</button>
+      <button class="btn btn-danger" onclick="breakFast()">Yes, Stop Fast</button>
     </div>
   </div>
 </div>
@@ -1041,7 +1041,8 @@ let state = {
   pausedElapsed: 0,
   pauseStart: null,
   totalPausedMs: 0,
-  completed: false
+  completed: false,
+  goalReached: false
 };
 
 const STAGES = [
@@ -1164,11 +1165,14 @@ function updateTimer() {
   updateStages(elapsedHours);
   updateYouAreHere(elapsedHours);
 
-  // Check completion
-  if (remaining <= 0 && !state.completed) {
-    state.completed = true;
-    clearInterval(state.timerInterval);
-    showCelebration(elapsed);
+  // Goal reached — keep running but show overtime indicator
+  if (remaining <= 0 && !state.goalReached) {
+    state.goalReached = true;
+    document.getElementById('timer-percent').style.color = 'var(--green)';
+  }
+  if (remaining <= 0) {
+    document.getElementById('timer-percent').textContent = Math.floor(progress * 100) + '%';
+    document.getElementById('timer-countdown').textContent = '+' + formatDuration(elapsed - state.totalMs);
   }
 }
 
@@ -1198,10 +1202,16 @@ function breakFast() {
   hideBreakModal();
   clearInterval(state.timerInterval);
   const elapsed = Date.now() - state.startTime - state.totalPausedMs;
-  // Save to history but mark as incomplete
+  const goalMet = elapsed >= state.totalMs;
+  // Save to history — mark complete if goal was met
+  state.completed = goalMet;
   saveFastHistory(elapsed);
-  // Show simple reset screen — no celebration for broken fasts
-  showBrokenFast(elapsed);
+  // Show celebration if goal met, encouragement if not
+  if (goalMet) {
+    showCelebration(elapsed);
+  } else {
+    showBrokenFast(elapsed);
+  }
 }
 
 // BROKEN FAST (no celebration)
@@ -1369,9 +1379,6 @@ function showCelebration(elapsedMs) {
   ];
   document.getElementById('post-fast-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
 
-  // Save fast to history
-  saveFastHistory(elapsedMs);
-
   showScreen('screen-celebration');
   launchConfetti();
 }
@@ -1400,7 +1407,7 @@ function resetApp() {
   state = {
     selectedPlan: null, selectedHours: 0, startTime: null, endTime: null,
     totalMs: 0, timerInterval: null, isPaused: false, pausedElapsed: 0,
-    pauseStart: null, totalPausedMs: 0, completed: false
+    pauseStart: null, totalPausedMs: 0, completed: false, goalReached: false
   };
   document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('custom-input').classList.remove('show');
@@ -1408,6 +1415,7 @@ function resetApp() {
   document.getElementById('start-time').value = '';
   document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
   document.getElementById('timer-percent').textContent = '0%';
+  document.getElementById('timer-percent').style.color = '';
   document.getElementById('timer-countdown').textContent = '00:00:00';
   document.getElementById('timer-elapsed').textContent = '00:00:00';
   document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
@@ -1738,7 +1746,7 @@ function saveFastHistory(elapsedMs) {
     durationMs: elapsedMs,
     durationHrs: hrs,
     goal: state.selectedHours,
-    completed: elapsedMs >= state.totalMs
+    completed: state.completed || elapsedMs >= state.totalMs
   });
   localStorage.setItem('fasttrack_history', JSON.stringify(history));
 }
