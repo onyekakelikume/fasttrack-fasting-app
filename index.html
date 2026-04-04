@@ -482,6 +482,41 @@ header p {
 .bmi-marker { position: absolute; top: -6px; width: 4px; height: 28px; background: var(--dark); border-radius: 2px; transform: translateX(-50%); transition: left 0.3s; }
 .bmi-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--gray); font-weight: 600; }
 .bmi-tip { font-size: 13px; color: #475569; line-height: 1.5; margin-top: 12px; padding: 12px; background: var(--light-gray); border-radius: 10px; }
+/* DARK MODE */
+body.dark { background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #E2E8F0; }
+body.dark .card { background: #1E293B; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+body.dark .card-title { color: #E2E8F0; }
+body.dark .plan-card { background: #1E293B; border-color: #334155; }
+body.dark .timer-info-box, body.dark .weight-stat, body.dark .summary-box { background: #334155; }
+body.dark .timer-info-box .label, body.dark .weight-stat .ws-label, body.dark .summary-box .s-label { color: #94A3B8; }
+body.dark .timer-info-box .value, body.dark .weight-stat .ws-value, body.dark .summary-box .s-value { color: #E2E8F0; }
+body.dark .btn-secondary { background: #334155; color: #E2E8F0; }
+body.dark .bottom-nav { background: rgba(15,23,42,0.97); border-color: rgba(255,255,255,0.08); }
+body.dark .modal-box { background: #1E293B; color: #E2E8F0; }
+body.dark .modal-box p { color: #94A3B8; }
+body.dark .cycle-dropdown { background: #334155; color: #CBD5E1; }
+body.dark .accordion-body { color: #94A3B8; }
+body.dark .accordion-header { color: #E2E8F0; }
+body.dark .stage-icon { background: #334155; }
+body.dark .stage-text .stage-desc, body.dark .stage-text .stage-time { color: #94A3B8; }
+body.dark .weight-chart-wrap { background: #334155; }
+body.dark .weight-entry { border-color: #334155; }
+body.dark .bmi-tip { background: #334155; color: #94A3B8; }
+body.dark .bmi-labels { color: #94A3B8; }
+body.dark input[type="date"], body.dark input[type="time"], body.dark input[type="number"] { background: #334155; color: #E2E8F0; border-color: #475569; }
+body.dark .custom-input-wrap input { background: #334155; color: #E2E8F0; border-color: var(--green); }
+body.dark .unit-btn { background: #334155; color: #94A3B8; }
+body.dark .light-gray, body.dark .accordion-item { border-color: #334155; }
+body.dark header p { color: #64748B; }
+/* WATER TRACKER */
+.water-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 14px 0; }
+.water-drop { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: all 0.2s; border: 2px solid var(--light-gray); background: var(--white); }
+.water-drop.filled { background: linear-gradient(135deg, #3B82F6, #06B6D4); border-color: transparent; transform: scale(1.1); }
+body.dark .water-drop { background: #334155; border-color: #475569; }
+body.dark .water-drop.filled { background: linear-gradient(135deg, #3B82F6, #06B6D4); border-color: transparent; }
+.water-progress { height: 10px; background: var(--light-gray); border-radius: 5px; overflow: hidden; margin: 8px 0; }
+.water-progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #06B6D4); border-radius: 5px; transition: width 0.3s; }
+body.dark .water-progress { background: #334155; }
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .app-container { padding: 12px; padding-bottom: 70px; }
@@ -542,6 +577,7 @@ FEATURES:
     <h1>⚡ FastTrack</h1>
     <p>Your cheerful fasting companion</p>
     <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume</p>
+    <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
   <!-- SCREEN 1: Plan Selection -->
@@ -643,6 +679,18 @@ FEATURES:
         <button class="btn btn-secondary" id="btn-pause" onclick="togglePause()">⏸️ Pause</button>
         <button class="btn btn-danger" onclick="showBreakModal()">🍽️ Break Fast</button>
       </div>
+    </div>
+
+    <!-- Water Tracker -->
+    <div class="card">
+      <div class="card-title">💧 Water Intake</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:700;" id="water-count">0/8</span>
+        <span style="font-size:13px;font-weight:700;color:var(--blue);" id="water-pct">0%</span>
+      </div>
+      <div class="water-progress"><div class="water-progress-fill" id="water-fill" style="width:0%;"></div></div>
+      <div class="water-grid" id="water-grid"></div>
+      <p style="font-size:11px;color:var(--gray);text-align:center;margin-top:4px;">Tap drops to log water • Goal: 8 glasses</p>
     </div>
 
     <!-- Body Stages -->
@@ -851,7 +899,9 @@ FEATURES:
           <div class="ws-value" id="hist-avg">--</div>
         </div>
       </div>
-      <div class="card-title" style="font-size:14px;margin-top:8px;">📈 Fasting Hours Chart</div>
+      <div class="card-title" style="font-size:14px;margin-top:8px;">📆 Weekly Summary</div>
+      <div id="weekly-summary"></div>
+      <div class="card-title" style="font-size:14px;margin-top:14px;">📈 Fasting Hours Chart</div>
       <div class="weight-chart-wrap">
         <svg id="fast-chart" width="100%" height="140" viewBox="0 0 400 140"></svg>
       </div>
@@ -1386,6 +1436,7 @@ function switchTab(tab) {
   } else if (tab === 'history') {
     showScreen('screen-history');
     loadFastHistory();
+    loadWeeklySummary();
   }
 }
 
@@ -1816,9 +1867,90 @@ function clearFastHistory() {
   }
 }
 
+// ===== DARK MODE =====
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('fasttrack_dark', isDark ? '1' : '0');
+  document.getElementById('dark-toggle').textContent = isDark ? '☀️' : '🌙';
+}
+// Load dark mode preference
+if (localStorage.getItem('fasttrack_dark') === '1') {
+  document.body.classList.add('dark');
+  document.getElementById('dark-toggle').textContent = '☀️';
+}
+
+// ===== WATER TRACKER =====
+function getWaterData() {
+  const today = new Date().toDateString();
+  try {
+    const data = JSON.parse(localStorage.getItem('fasttrack_water')) || {};
+    return data[today] || 0;
+  } catch(e) { return 0; }
+}
+function saveWaterData(count) {
+  const today = new Date().toDateString();
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem('fasttrack_water')) || {}; } catch(e) {}
+  data[today] = count;
+  localStorage.setItem('fasttrack_water', JSON.stringify(data));
+}
+function toggleWaterDrop(idx) {
+  let current = getWaterData();
+  if (idx + 1 === current) { current = idx; } else { current = idx + 1; }
+  saveWaterData(current);
+  renderWater();
+}
+function renderWater() {
+  const count = getWaterData();
+  const goal = 8;
+  const grid = document.getElementById('water-grid');
+  if (!grid) return;
+  let html = '';
+  for (let i = 0; i < goal; i++) {
+    html += '<div class="water-drop ' + (i < count ? 'filled' : '') + '" onclick="toggleWaterDrop(' + i + ')">' + (i < count ? '💧' : '○') + '</div>';
+  }
+  grid.innerHTML = html;
+  const pct = Math.round((count / goal) * 100);
+  document.getElementById('water-count').textContent = count + '/' + goal;
+  document.getElementById('water-pct').textContent = pct + '%';
+  document.getElementById('water-fill').style.width = pct + '%';
+}
+
+// ===== WEEKLY SUMMARY =====
+function loadWeeklySummary() {
+  const history = getFastHistory();
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+  const thisWeek = history.filter(h => new Date(h.date) >= weekAgo);
+  const completed = thisWeek.filter(h => h.completed).length;
+  const totalHrs = thisWeek.reduce((s, h) => s + h.durationHrs, 0);
+  const avgHrs = thisWeek.length > 0 ? Math.round((totalHrs / thisWeek.length) * 10) / 10 : 0;
+  // Day-by-day for the week
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let dayData = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    const dayFasts = history.filter(h => new Date(h.date).toDateString() === d.toDateString());
+    const hrs = dayFasts.reduce((s, h) => s + h.durationHrs, 0);
+    dayData.push({ day: days[d.getDay()], hrs: Math.round(hrs * 10) / 10, fasted: dayFasts.length > 0 });
+  }
+  const el = document.getElementById('weekly-summary');
+  if (!el) return;
+  let html = '<div class="weight-stats" style="margin-bottom:12px;"><div class="weight-stat"><div class="ws-label">This Week</div><div class="ws-value">' + thisWeek.length + ' fasts</div></div><div class="weight-stat"><div class="ws-label">Completed</div><div class="ws-value" style="color:var(--green);">' + completed + ' ✅</div></div><div class="weight-stat"><div class="ws-label">Total Hours</div><div class="ws-value">' + Math.round(totalHrs) + 'h</div></div></div>';
+  // Mini calendar
+  html += '<div style="display:flex;justify-content:space-between;gap:4px;margin-top:8px;">';
+  dayData.forEach(d => {
+    const color = d.fasted ? (d.hrs >= 12 ? 'var(--green)' : 'var(--orange)') : 'var(--light-gray)';
+    html += '<div style="flex:1;text-align:center;"><div style="font-size:10px;font-weight:600;color:var(--gray);">' + d.day + '</div><div style="width:32px;height:32px;border-radius:8px;background:' + color + ';margin:4px auto;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;">' + (d.fasted ? d.hrs + 'h' : '—') + '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 // ===== INIT =====
-// Load weight data on startup
 loadWeightData();
+renderWater();
 </script>
 </body>
 </html>
