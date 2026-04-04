@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.33</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.34</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1538,13 +1538,13 @@ function switchTab(tab) {
   document.getElementById('nav-' + tab).classList.add('active');
   
   if (tab === 'timer') {
-    // Show timer-related screens based on state
-    if (feedState.feedStart && feedState.feedInterval) {
+    // Show timer-related screens based on state — active fast takes priority over feeding
+    if (state.startTime && !state.completed) {
+      showScreen('screen-timer');
+    } else if (feedState.feedStart && feedState.feedInterval) {
       showScreen('screen-feeding');
     } else if (state.completed) {
       showScreen('screen-celebration');
-    } else if (state.startTime && !state.completed) {
-      showScreen('screen-timer');
     } else {
       showScreen('screen-plan');
     }
@@ -2275,6 +2275,9 @@ function updateFeedingTimer() {
 
 function skipFeedingStartFast() {
   clearInterval(feedState.feedInterval);
+  feedState.feedInterval = null;
+  feedState.feedStart = null;
+  feedState.feedDurationMs = 0;
   localStorage.removeItem('fasttrack_feeding');
   document.getElementById('feed-percent').style.fontSize = '';
   resetApp();

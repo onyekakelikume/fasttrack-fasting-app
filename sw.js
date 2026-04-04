@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'fasttrack-v33';
+const CACHE_VERSION = 'fasttrack-v34';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
