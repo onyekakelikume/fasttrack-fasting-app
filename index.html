@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.40</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.41</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1240,11 +1240,18 @@ function startTimer() {
   updateTimer();
 }
 
+let lastTimerSave = 0;
 function updateTimer() {
   if (state.isPaused) return;
 
   const now = Date.now();
   const elapsed = now - state.startTime - state.totalPausedMs;
+  
+  // Save timer state every 30 seconds so it survives app close
+  if (now - lastTimerSave > 30000) {
+    lastTimerSave = now;
+    saveTimerState();
+  }
   const remaining = Math.max(0, state.totalMs - elapsed);
   const progress = Math.min(1, elapsed / state.totalMs);
 
@@ -2570,6 +2577,27 @@ localStorage.setItem = function(key, value) {
     backupData();
   }
 };
+
+// Save state when app is about to close or go to background
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    if (state.startTime && !state.completed) {
+      saveTimerState();
+    }
+    backupData();
+  }
+});
+window.addEventListener('beforeunload', function() {
+  if (state.startTime && !state.completed) {
+    saveTimerState();
+  }
+});
+window.addEventListener('pagehide', function() {
+  if (state.startTime && !state.completed) {
+    saveTimerState();
+  }
+  backupData();
+});
 
 // ===== INIT =====
 async function initApp() {
