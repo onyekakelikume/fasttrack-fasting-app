@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.43</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.44</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1317,12 +1317,16 @@ function hideBreakModal() {
 function breakFast() {
   hideBreakModal();
   clearInterval(state.timerInterval);
-  clearTimerState();
   const elapsed = Date.now() - state.startTime - state.totalPausedMs;
   const goalMet = elapsed >= state.totalMs;
   // Save to history — mark complete if goal was met
-  state.completed = goalMet;
+  state.completed = true;  // Always mark completed so it won't re-save on close
   saveFastHistory(elapsed);
+  // Clear timer state from storage
+  clearTimerState();
+  // Clear the start time so visibilitychange won't re-save
+  state.startTime = null;
+  state.timerInterval = null;
   // Show brief summary then auto-start feeding window
   if (goalMet) {
     showCelebration(elapsed);
