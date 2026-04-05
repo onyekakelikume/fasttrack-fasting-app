@@ -2198,20 +2198,59 @@ function clearFastHistory() {
 }
 
 // ===== DARK MODE =====
+let manualDarkOverride = false;
 function toggleDarkMode() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
   localStorage.setItem('fasttrack_dark', isDark ? '1' : '0');
+  localStorage.setItem('fasttrack_darkmode_manual', '1');
+  manualDarkOverride = true;
   document.getElementById('dark-toggle').textContent = isDark ? '☀️' : '🌙';
 }
+
+function checkAutoDarkMode() {
+  if (manualDarkOverride) return;
+  const h = new Date().getHours();
+  const shouldBeDark = h >= 18 || h < 6;
+  const isDark = document.body.classList.contains('dark');
+  if (shouldBeDark && !isDark) {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '☀️';
+  } else if (!shouldBeDark && isDark) {
+    document.body.classList.remove('dark');
+    document.getElementById('dark-toggle').textContent = '🌙';
+  }
+}
+
+// Check auto dark mode every minute
+setInterval(checkAutoDarkMode, 60000);
+
 // Load dark mode preference — auto dark after 6pm, auto light before 6pm
-const manualDark = localStorage.getItem('fasttrack_dark');
+const manualDark = localStorage.getItem('fasttrack_darkmode_manual');
 const hour = new Date().getHours();
 const autoDark = hour >= 18 || hour < 6;
-if (manualDark === '1' || (manualDark === null && autoDark)) {
+const savedDark = localStorage.getItem('fasttrack_dark');
+if (manualDark === '1' && savedDark !== null) {
+  manualDarkOverride = true;
+  if (savedDark === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '☀️';
+  }
+} else if (autoDark) {
   document.body.classList.add('dark');
   document.getElementById('dark-toggle').textContent = '☀️';
 }
+
+// Reset manual override at midnight so auto mode resumes next day
+function checkMidnightReset() {
+  const now = new Date();
+  if (now.getHours() === 0 && now.getMinutes() === 0) {
+    manualDarkOverride = false;
+    localStorage.removeItem('fasttrack_darkmode_manual');
+    checkAutoDarkMode();
+  }
+}
+setInterval(checkMidnightReset, 60000);
 
 // ===== WATER TRACKER =====
 function getWaterData() {
@@ -2328,6 +2367,9 @@ function getTimeGreeting() {
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
+// Update greeting every minute to keep it current
+setInterval(updateGreeting, 60000);
+
 function updateGreeting() {
   const name = localStorage.getItem('fasttrack_username');
   const el = document.getElementById('header-greeting');
