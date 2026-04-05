@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.36</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.37</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -2393,47 +2393,124 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ===== INIT =====
-cleanupDuplicateFasts();
-cleanupDuplicateWeights();
-loadWeightData();
-loadBMIData();
-renderWater();
-loadAvatar();
+// ===== DATA BACKUP (IndexedDB — more persistent than localStorage on iOS) =====
+function openBackupDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('FastTrackBackup', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('backup');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
 
-// Restore saved plan selection
-const savedPlan = localStorage.getItem('fasttrack_plan');
-if (savedPlan) {
+async function backupData() {
   try {
-    const planData = JSON.parse(savedPlan);
-    state.selectedPlan = planData.plan;
-    state.selectedHours = planData.hours;
-    // Highlight the saved plan card
-    const planCards = document.querySelectorAll('.plan-card');
-    planCards.forEach(card => {
-      const onclick = card.getAttribute('onclick');
-      if (planData.plan === 'custom' && onclick && onclick.includes("'custom'")) {
-        card.classList.add('selected');
-        document.getElementById('custom-input').classList.add('show');
-        document.getElementById('custom-hours').value = planData.hours;
-      } else if (onclick && onclick.includes(', ' + planData.plan + ')')) {
-        card.classList.add('selected');
-      }
+    const db = await openBackupDB();
+    const tx = db.transaction('backup', 'readwrite');
+    const store = tx.objectStore('backup');
+    // Back up all FastTrack localStorage keys
+    const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal', 
+                  'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
+                  'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
+                  'fasttrack_water', 'fasttrack_feeding'];
+    keys.forEach(key => {
+      const val = localStorage.getItem(key);
+      if (val) store.put(val, key);
     });
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    });
+    db.close();
   } catch(e) {}
 }
 
-// Check if user has set their name
-const savedName = localStorage.getItem('fasttrack_username');
-if (savedName) {
-  updateGreeting();
-  // Check for active feeding window first
-  if (!resumeFeedingWindow()) {
-    showScreen('screen-plan');
-  }
-} else {
-  showScreen('screen-welcome');
+async function restoreFromBackup() {
+  try {
+    const db = await openBackupDB();
+    const tx = db.transaction('backup', 'readonly');
+    const store = tx.objectStore('backup');
+    const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal',
+                  'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
+                  'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
+                  'fasttrack_water', 'fasttrack_feeding'];
+    let restored = false;
+    for (const key of keys) {
+      const val = await new Promise((resolve) => {
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      });
+      if (val && !localStorage.getItem(key)) {
+        localStorage.setItem(key, val);
+        restored = true;
+      }
+    }
+    db.close();
+    return restored;
+  } catch(e) { return false; }
 }
+
+// Back up data every time a fast is saved, weight is saved, or settings change
+const origSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  origSetItem(key, value);
+  if (key.startsWith('fasttrack_')) {
+    backupData();
+  }
+};
+
+// ===== INIT =====
+async function initApp() {
+  // Try to restore from IndexedDB backup if localStorage was wiped
+  const wasRestored = await restoreFromBackup();
+  
+  cleanupDuplicateFasts();
+  cleanupDuplicateWeights();
+  loadWeightData();
+  loadBMIData();
+  renderWater();
+  loadAvatar();
+
+  // Restore saved plan selection
+  const savedPlan = localStorage.getItem('fasttrack_plan');
+  if (savedPlan) {
+    try {
+      const planData = JSON.parse(savedPlan);
+      state.selectedPlan = planData.plan;
+      state.selectedHours = planData.hours;
+      // Highlight the saved plan card
+      const planCards = document.querySelectorAll('.plan-card');
+      planCards.forEach(card => {
+        const onclick = card.getAttribute('onclick');
+        if (planData.plan === 'custom' && onclick && onclick.includes("'custom'")) {
+          card.classList.add('selected');
+          document.getElementById('custom-input').classList.add('show');
+          document.getElementById('custom-hours').value = planData.hours;
+        } else if (onclick && onclick.includes(', ' + planData.plan + ')')) {
+          card.classList.add('selected');
+        }
+      });
+    } catch(e) {}
+  }
+
+  // Check if user has set their name
+  const savedName = localStorage.getItem('fasttrack_username');
+  if (savedName) {
+    updateGreeting();
+    // Check for active feeding window first
+    if (!resumeFeedingWindow()) {
+      showScreen('screen-plan');
+    }
+  } else {
+    showScreen('screen-welcome');
+  }
+  
+  // Initial backup
+  backupData();
+}
+
+initApp();
 </script>
 </body>
 </html>
