@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.44</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.45</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1165,6 +1165,7 @@ function startFast() {
   } else {
     state.startTime = Date.now();
   }
+  state.originalPlanHours = state.selectedHours;  // Save original plan for feeding window
   state.totalMs = state.selectedHours * 3600000;
   state.endTime = state.startTime + state.totalMs;
   state.isPaused = false;
@@ -1185,6 +1186,7 @@ function saveTimerState() {
   localStorage.setItem('fasttrack_timer', JSON.stringify({
     selectedPlan: state.selectedPlan,
     selectedHours: state.selectedHours,
+    originalPlanHours: state.originalPlanHours,
     startTime: state.startTime,
     endTime: state.endTime,
     totalMs: state.totalMs,
@@ -1208,6 +1210,7 @@ function restoreTimerState() {
     if (!data.startTime) return false;
     state.selectedPlan = data.selectedPlan;
     state.selectedHours = data.selectedHours;
+    state.originalPlanHours = data.originalPlanHours || data.selectedHours;
     state.startTime = data.startTime;
     state.endTime = data.endTime;
     state.totalMs = data.totalMs;
@@ -1317,7 +1320,9 @@ function hideBreakModal() {
 function breakFast() {
   hideBreakModal();
   clearInterval(state.timerInterval);
-  const elapsed = Date.now() - state.startTime - state.totalPausedMs;
+  // Use edited end time if it's in the past, otherwise use current time
+  const stopTime = (state.endTime && state.endTime <= Date.now()) ? state.endTime : Date.now();
+  const elapsed = stopTime - state.startTime - state.totalPausedMs;
   const goalMet = elapsed >= state.totalMs;
   // Save to history — mark complete if goal was met
   state.completed = true;  // Always mark completed so it won't re-save on close
@@ -1333,8 +1338,8 @@ function breakFast() {
   } else {
     showBrokenFast(elapsed);
   }
-  // Auto-start feeding window after 4 seconds
-  const savedHours = state.selectedHours;
+  // Auto-start feeding window after 4 seconds — use original plan hours for feeding window
+  const savedHours = state.originalPlanHours || state.selectedHours;
   const savedPlan = state.selectedPlan;
   setTimeout(function() {
     state.selectedHours = savedHours;
