@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.37</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.38</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1212,8 +1212,14 @@ function updateTimer() {
   const cycleColor = getCycleColor(elapsedHours);
   const ring = document.getElementById('progress-ring');
   ring.setAttribute('stroke', cycleColor);
-  document.getElementById('timer-percent').style.color = cycleColor;
-  document.getElementById('timer-countdown').style.color = cycleColor;
+  const timerPct = document.getElementById('timer-percent');
+  const timerCd = document.getElementById('timer-countdown');
+  timerPct.style.background = 'none';
+  timerPct.style.webkitBackgroundClip = 'unset';
+  timerPct.style.backgroundClip = 'unset';
+  timerPct.style.webkitTextFillColor = cycleColor;
+  timerPct.style.color = cycleColor;
+  timerCd.style.color = cycleColor;
 
   // Goal reached — keep running but show overtime indicator
   if (remaining <= 0 && !state.goalReached) {
@@ -1486,6 +1492,10 @@ function resetApp() {
   document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
   document.getElementById('timer-percent').textContent = '0%';
   document.getElementById('timer-percent').style.color = '';
+  document.getElementById('timer-percent').style.background = '';
+  document.getElementById('timer-percent').style.webkitBackgroundClip = '';
+  document.getElementById('timer-percent').style.backgroundClip = '';
+  document.getElementById('timer-percent').style.webkitTextFillColor = '';
   document.getElementById('timer-countdown').style.color = '';
   document.getElementById('progress-ring').setAttribute('stroke', 'url(#ringGrad)');
   document.getElementById('timer-countdown').textContent = '00:00:00';
