@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.39</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.40</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -672,14 +672,15 @@ FEATURES:
     <div class="card" style="text-align:center;">
       <div class="timer-ring-wrap">
         <svg id="timer-svg" width="220" height="220" viewBox="0 0 220 220">
-          <defs>
-            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:var(--coral)"/>
-              <stop offset="100%" style="stop-color:var(--purple)"/>
-            </linearGradient>
-          </defs>
+          <!-- Background track -->
           <circle cx="110" cy="110" r="95" fill="none" stroke="#F1F5F9" stroke-width="14"/>
-          <circle id="progress-ring" cx="110" cy="110" r="95" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <!-- Multi-color phase segments (filled by JS) -->
+          <circle id="ring-phase-0" cx="110" cy="110" r="95" fill="none" stroke="#FB923C" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <circle id="ring-phase-1" cx="110" cy="110" r="95" fill="none" stroke="#3B82F6" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <circle id="ring-phase-2" cx="110" cy="110" r="95" fill="none" stroke="#FF6B6B" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <circle id="ring-phase-3" cx="110" cy="110" r="95" fill="none" stroke="#8B5CF6" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <circle id="ring-phase-4" cx="110" cy="110" r="95" fill="none" stroke="#48C774" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
+          <circle id="ring-phase-5" cx="110" cy="110" r="95" fill="none" stroke="#F59E0B" stroke-width="14" stroke-linecap="butt" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)"/>
         </svg>
         <div class="timer-center">
           <div class="timer-percent" id="timer-percent">0%</div>
@@ -1247,10 +1248,7 @@ function updateTimer() {
   const remaining = Math.max(0, state.totalMs - elapsed);
   const progress = Math.min(1, elapsed / state.totalMs);
 
-  // Update ring
-  const circumference = 2 * Math.PI * 95;
-  const offset = circumference * (1 - progress);
-  document.getElementById('progress-ring').setAttribute('stroke-dashoffset', offset);
+  // Ring is now updated by updateMultiColorRing() below
 
   // Update text
   document.getElementById('timer-percent').textContent = Math.floor(progress * 100) + '%';
@@ -1262,10 +1260,11 @@ function updateTimer() {
   updateStages(elapsedHours);
   updateYouAreHere(elapsedHours);
 
-  // Color-code timer based on 24h body cycle phase
+  // Color-code timer ring — multi-color segments for each body cycle phase
+  updateMultiColorRing(elapsedHours, state.selectedHours);
+  
+  // Text color matches current phase
   const cycleColor = getCycleColor(elapsedHours);
-  const ring = document.getElementById('progress-ring');
-  ring.setAttribute('stroke', cycleColor);
   const timerPct = document.getElementById('timer-percent');
   const timerCd = document.getElementById('timer-countdown');
   timerPct.style.background = 'none';
@@ -1475,6 +1474,47 @@ function toggleCycleInfo(idx) {
   }
 }
 
+function updateMultiColorRing(elapsedHours, totalHours) {
+  const circumference = 2 * Math.PI * 95; // ~597
+  // Phase boundaries in hours
+  const phases = [
+    { start: 0, end: 4 },    // Orange — Blood Sugar Rises
+    { start: 4, end: 8 },    // Blue — Blood Sugar Drops
+    { start: 8, end: 12 },   // Coral — Fat Burning
+    { start: 12, end: 16 },  // Purple — Autophagy
+    { start: 16, end: 20 },  // Green — Catabolic
+    { start: 20, end: 24 }   // Gold — Deep Renewal
+  ];
+  
+  for (let i = 0; i < phases.length; i++) {
+    const ring = document.getElementById('ring-phase-' + i);
+    const phase = phases[i];
+    
+    // How much of the total fast does this phase represent?
+    const phaseStartFraction = phase.start / totalHours;
+    const phaseEndFraction = Math.min(phase.end / totalHours, 1);
+    const phaseLength = (phaseEndFraction - phaseStartFraction) * circumference;
+    
+    if (elapsedHours <= phase.start) {
+      // Haven't reached this phase yet — hide it
+      ring.setAttribute('stroke-dasharray', '0 ' + circumference);
+      ring.setAttribute('stroke-dashoffset', '0');
+    } else if (elapsedHours >= phase.end) {
+      // Completed this phase — show full segment
+      const gapAfter = circumference - phaseLength;
+      ring.setAttribute('stroke-dasharray', phaseLength + ' ' + gapAfter);
+      ring.setAttribute('stroke-dashoffset', -(phaseStartFraction * circumference));
+    } else {
+      // Currently in this phase — partially fill
+      const phaseProgress = (elapsedHours - phase.start) / (phase.end - phase.start);
+      const filledLength = phaseProgress * phaseLength;
+      const gapAfter = circumference - filledLength;
+      ring.setAttribute('stroke-dasharray', filledLength + ' ' + gapAfter);
+      ring.setAttribute('stroke-dashoffset', -(phaseStartFraction * circumference));
+    }
+  }
+}
+
 function getCycleColor(elapsedH) {
   if (elapsedH < 4) return '#FB923C';   // Orange — Blood Sugar Rises
   if (elapsedH < 8) return '#3B82F6';   // Blue — Blood Sugar Drops
@@ -1546,7 +1586,12 @@ function resetApp() {
   document.getElementById('custom-input').classList.remove('show');
   document.getElementById('start-date').value = '';
   document.getElementById('start-time').value = '';
-  document.getElementById('progress-ring').setAttribute('stroke-dashoffset', '597');
+  // Reset all phase rings
+  for (let i = 0; i < 6; i++) {
+    const ring = document.getElementById('ring-phase-' + i);
+    ring.setAttribute('stroke-dasharray', '597');
+    ring.setAttribute('stroke-dashoffset', '597');
+  }
   document.getElementById('timer-percent').textContent = '0%';
   document.getElementById('timer-percent').style.color = '';
   document.getElementById('timer-percent').style.background = '';
@@ -1554,7 +1599,6 @@ function resetApp() {
   document.getElementById('timer-percent').style.backgroundClip = '';
   document.getElementById('timer-percent').style.webkitTextFillColor = '';
   document.getElementById('timer-countdown').style.color = '';
-  document.getElementById('progress-ring').setAttribute('stroke', 'url(#ringGrad)');
   document.getElementById('timer-countdown').textContent = '00:00:00';
   document.getElementById('timer-elapsed').textContent = '00:00:00';
   document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
