@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.38</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.39</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1177,6 +1177,60 @@ function startFast() {
   buildStages();
   showScreen('screen-timer');
   startTimer();
+  saveTimerState();
+}
+
+function saveTimerState() {
+  localStorage.setItem('fasttrack_timer', JSON.stringify({
+    selectedPlan: state.selectedPlan,
+    selectedHours: state.selectedHours,
+    startTime: state.startTime,
+    endTime: state.endTime,
+    totalMs: state.totalMs,
+    isPaused: state.isPaused,
+    totalPausedMs: state.totalPausedMs,
+    pauseStart: state.pauseStart,
+    completed: state.completed,
+    goalReached: state.goalReached
+  }));
+}
+
+function clearTimerState() {
+  localStorage.removeItem('fasttrack_timer');
+}
+
+function restoreTimerState() {
+  const saved = localStorage.getItem('fasttrack_timer');
+  if (!saved) return false;
+  try {
+    const data = JSON.parse(saved);
+    if (!data.startTime) return false;
+    state.selectedPlan = data.selectedPlan;
+    state.selectedHours = data.selectedHours;
+    state.startTime = data.startTime;
+    state.endTime = data.endTime;
+    state.totalMs = data.totalMs;
+    state.isPaused = data.isPaused || false;
+    state.totalPausedMs = data.totalPausedMs || 0;
+    state.pauseStart = data.pauseStart || null;
+    state.completed = data.completed || false;
+    state.goalReached = data.goalReached || false;
+    
+    // Restore UI
+    document.getElementById('timer-goal').textContent = state.selectedHours + 'h 0m';
+    document.getElementById('timer-start').textContent = formatTime(new Date(state.startTime));
+    document.getElementById('timer-end').textContent = formatTime(new Date(state.endTime));
+    
+    if (state.isPaused) {
+      document.getElementById('btn-pause').innerHTML = '▶️ Resume';
+      document.getElementById('btn-pause').className = 'btn btn-primary';
+    }
+    
+    buildStages();
+    showScreen('screen-timer');
+    startTimer();
+    return true;
+  } catch(e) { return false; }
 }
 
 function startTimer() {
@@ -1245,6 +1299,7 @@ function togglePause() {
     document.getElementById('btn-pause').innerHTML = '▶️ Resume';
     document.getElementById('btn-pause').className = 'btn btn-success';
   }
+  saveTimerState();
 }
 
 function showBreakModal() {
@@ -1256,6 +1311,7 @@ function hideBreakModal() {
 function breakFast() {
   hideBreakModal();
   clearInterval(state.timerInterval);
+  clearTimerState();
   const elapsed = Date.now() - state.startTime - state.totalPausedMs;
   const goalMet = elapsed >= state.totalMs;
   // Save to history — mark complete if goal was met
@@ -1480,6 +1536,7 @@ function launchConfetti() {
 
 function resetApp() {
   clearInterval(state.timerInterval);
+  clearTimerState();
   state = {
     selectedPlan: null, selectedHours: 0, startTime: null, endTime: null,
     totalMs: 0, timerInterval: null, isPaused: false, pausedElapsed: 0,
@@ -2422,7 +2479,7 @@ async function backupData() {
     const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal', 
                   'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
                   'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
-                  'fasttrack_water', 'fasttrack_feeding'];
+                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer'];
     keys.forEach(key => {
       const val = localStorage.getItem(key);
       if (val) store.put(val, key);
@@ -2443,7 +2500,7 @@ async function restoreFromBackup() {
     const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal',
                   'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
                   'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
-                  'fasttrack_water', 'fasttrack_feeding'];
+                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer'];
     let restored = false;
     for (const key of keys) {
       const val = await new Promise((resolve) => {
@@ -2508,9 +2565,11 @@ async function initApp() {
   const savedName = localStorage.getItem('fasttrack_username');
   if (savedName) {
     updateGreeting();
-    // Check for active feeding window first
-    if (!resumeFeedingWindow()) {
-      showScreen('screen-plan');
+    // Priority: active timer > feeding window > plan screen
+    if (!restoreTimerState()) {
+      if (!resumeFeedingWindow()) {
+        showScreen('screen-plan');
+      }
     }
   } else {
     showScreen('screen-welcome');
