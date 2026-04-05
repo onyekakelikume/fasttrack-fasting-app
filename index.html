@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.45</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.46</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -994,7 +994,12 @@ FEATURES:
 <div class="modal-overlay" id="break-modal">
   <div class="modal-box">
     <h3>🛑 Stop Your Fast?</h3>
-    <p>Are you sure you want to end your fast? Your progress will be saved.</p>
+    <p>When did you stop fasting?</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="date" id="stop-date" style="flex:1;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+      <input type="time" id="stop-time" style="flex:1;padding:12px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;">
+    </div>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Leave as-is to use current time</p>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="hideBreakModal()">Cancel</button>
       <button class="btn btn-danger" onclick="breakFast()">Yes, Stop Fast</button>
@@ -1312,6 +1317,12 @@ function togglePause() {
 }
 
 function showBreakModal() {
+  const now = new Date();
+  document.getElementById('stop-time').value = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const y = now.getFullYear();
+  const m = (now.getMonth()+1).toString().padStart(2,'0');
+  const d = now.getDate().toString().padStart(2,'0');
+  document.getElementById('stop-date').value = y + '-' + m + '-' + d;
   document.getElementById('break-modal').classList.add('show');
 }
 function hideBreakModal() {
@@ -1320,8 +1331,26 @@ function hideBreakModal() {
 function breakFast() {
   hideBreakModal();
   clearInterval(state.timerInterval);
-  // Use edited end time if it's in the past, otherwise use current time
-  const stopTime = (state.endTime && state.endTime <= Date.now()) ? state.endTime : Date.now();
+  // Use the stop time entered in the modal
+  const stopTimeVal = document.getElementById('stop-time').value;
+  const stopDateVal = document.getElementById('stop-date').value;
+  let stopTime;
+  if (stopTimeVal && stopDateVal) {
+    stopTime = new Date(stopDateVal + 'T' + stopTimeVal).getTime();
+  } else if (stopTimeVal) {
+    const now = new Date();
+    const [hh, mm] = stopTimeVal.split(':').map(Number);
+    now.setHours(hh, mm, 0, 0);
+    stopTime = now.getTime();
+  } else {
+    stopTime = Date.now();
+  }
+  // Don't allow stop time before start time
+  if (stopTime < state.startTime) {
+    alert('Stop time cannot be before start time!');
+    showBreakModal();
+    return;
+  }
   const elapsed = stopTime - state.startTime - state.totalPausedMs;
   const goalMet = elapsed >= state.totalMs;
   // Save to history — mark complete if goal was met
@@ -1338,16 +1367,17 @@ function breakFast() {
   } else {
     showBrokenFast(elapsed);
   }
-  // Auto-start feeding window after 4 seconds — use original plan hours for feeding window
+  // Auto-start feeding window after 4 seconds — use original plan hours, start from actual stop time
   const savedHours = state.originalPlanHours || state.selectedHours;
   const savedPlan = state.selectedPlan;
+  const actualStopTime = stopTime;
   setTimeout(function() {
     state.selectedHours = savedHours;
     state.selectedPlan = savedPlan;
     // Clear any existing intervals first
     if (feedState.feedInterval) clearInterval(feedState.feedInterval);
     feedState.feedInterval = null;
-    startFeedingWindow();
+    startFeedingWindow(actualStopTime);
   }, 4000);
 }
 
@@ -2408,10 +2438,10 @@ function getFeedingHours(fastingHours) {
   return Math.max(1, Math.min(23, feedHrs));
 }
 
-function startFeedingWindow() {
+function startFeedingWindow(fromTime) {
   const fastHrs = state.selectedHours || 16;
   const feedHours = getFeedingHours(fastHrs);
-  feedState.feedStart = Date.now();
+  feedState.feedStart = fromTime || Date.now();
   feedState.feedDurationMs = feedHours * 3600000;
   
   // Save feeding state to localStorage so it survives app close
