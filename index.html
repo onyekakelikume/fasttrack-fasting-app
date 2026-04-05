@@ -586,7 +586,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.46</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.47</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1205,6 +1205,12 @@ function saveTimerState() {
 
 function clearTimerState() {
   localStorage.removeItem('fasttrack_timer');
+  // Also clear from IndexedDB backup so it doesn't get restored
+  openBackupDB().then(db => {
+    const tx = db.transaction('backup', 'readwrite');
+    tx.objectStore('backup').delete('fasttrack_timer');
+    tx.oncomplete = () => db.close();
+  }).catch(() => {});
 }
 
 function restoreTimerState() {
@@ -2614,7 +2620,11 @@ async function backupData() {
                   'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer'];
     keys.forEach(key => {
       const val = localStorage.getItem(key);
-      if (val) store.put(val, key);
+      if (val) {
+        store.put(val, key);
+      } else {
+        store.delete(key);  // Remove from backup if removed from localStorage
+      }
     });
     await new Promise((resolve, reject) => {
       tx.oncomplete = resolve;
