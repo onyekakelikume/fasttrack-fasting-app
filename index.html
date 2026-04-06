@@ -516,6 +516,83 @@ body.dark .unit-btn { background: #334155; color: #94A3B8; border-color: #475569
 body.dark .unit-btn.active { background: linear-gradient(135deg, var(--coral), var(--purple)); color: white; border-color: var(--purple); }
 body.dark .light-gray, body.dark .accordion-item { border-color: #334155; }
 body.dark header p { color: #64748B; }
+/* ACTIVITY TRACKER */
+.activity-type-btn {
+  padding: 10px 14px;
+  border: 2px solid var(--light-gray);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.activity-type-btn.selected {
+  border-color: var(--coral);
+  background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(139,92,246,0.15));
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(255,107,107,0.3);
+}
+.dark .activity-type-btn {
+  background: var(--dark-card);
+  border-color: #475569;
+  color: #E2E8F0;
+}
+.dark .activity-type-btn.selected {
+  border-color: var(--coral);
+  background: linear-gradient(135deg, rgba(255,107,107,0.25), rgba(139,92,246,0.25));
+}
+.workout-card {
+  border: 2px solid var(--light-gray);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.workout-card:hover { border-color: var(--purple); }
+.workout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.workout-meta {
+  font-size: 11px;
+  color: var(--gray);
+  font-weight: 600;
+}
+.workout-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--light-gray);
+}
+.workout-card.open .workout-body { display: block; }
+.exercise-item {
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.exercise-item:last-of-type { border-bottom: none; }
+.dark .workout-card { border-color: #475569; }
+.dark .workout-card:hover { border-color: var(--purple); }
+.dark .workout-body { border-top-color: #475569; }
+.dark .exercise-item { border-bottom-color: rgba(255,255,255,0.05); }
+.activity-log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  font-size: 13px;
+}
+.activity-log-item:last-child { border-bottom: none; }
+.dark .activity-log-item { border-bottom-color: rgba(255,255,255,0.06); }
+
 /* WATER TRACKER */
 .water-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 14px 0; }
 .water-drop { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: all 0.2s; border: 2px solid var(--light-gray); background: var(--white); }
@@ -586,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.48</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Created by Onyeka Kelikume • v1.49</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -857,6 +934,189 @@ FEATURES:
     </div>
   </div>
 
+  <!-- SCREEN: Activity Tracker -->
+  <div id="screen-activity" class="screen">
+
+    <!-- Daily Activity Goal -->
+    <div class="card">
+      <div class="card-title">🎯 Daily Activity Goal</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Goal (minutes)</label>
+          <input type="number" id="activity-goal-input" value="30" min="5" max="300" step="5" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;text-align:center;">
+        </div>
+        <button class="btn btn-primary" onclick="saveActivityGoal()" style="padding:10px 16px;">💾 Set</button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:12px;">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="65" fill="none" stroke="#F1F5F9" stroke-width="12"/>
+          <circle id="activity-goal-ring" cx="80" cy="80" r="65" fill="none" stroke="var(--green)" stroke-width="12" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408" transform="rotate(-90 80 80)"/>
+        </svg>
+        <div style="position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;width:160px;height:160px;">
+          <div id="activity-goal-pct" style="font-size:28px;font-weight:800;color:var(--green);">0%</div>
+          <div id="activity-goal-mins" style="font-size:13px;color:var(--gray);font-weight:600;">0 / 30 min</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Activity -->
+    <div class="card">
+      <div class="card-title">📝 Log Activity</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;" id="activity-types">
+        <button class="activity-type-btn" onclick="selectActivity(this, 'walking')" data-cal="4">🚶 Walking</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'running')" data-cal="10">🏃 Running</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'gym')" data-cal="7">🏋️ Gym</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'yoga')" data-cal="3">🧘 Yoga</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'swimming')" data-cal="8">🏊 Swimming</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'cycling')" data-cal="7">🚴 Cycling</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'hiit')" data-cal="12">⚡ HIIT</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'stretching')" data-cal="2">🤸 Stretching</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'dancing')" data-cal="6">💃 Dancing</button>
+        <button class="activity-type-btn" onclick="selectActivity(this, 'sports')" data-cal="8">⚽ Sports</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Duration (min)</label>
+          <input type="number" id="activity-duration" placeholder="30" min="1" max="600" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;text-align:center;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Intensity</label>
+          <select id="activity-intensity" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;background:#fff;">
+            <option value="light">😌 Light</option>
+            <option value="moderate" selected>💪 Moderate</option>
+            <option value="intense">🔥 Intense</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Est. Calories</label>
+          <div id="activity-cal-estimate" style="padding:10px;background:var(--light-gray);border-radius:10px;font-size:16px;font-weight:700;text-align:center;color:var(--coral);">0 cal</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="logActivity()" style="width:100%;padding:14px;font-size:16px;">✅ Log Activity</button>
+    </div>
+
+    <!-- Fasting + Activity Optimizer -->
+    <div class="card">
+      <div class="card-title">⚡ Fasting × Activity Optimizer</div>
+      <div id="activity-optimizer" style="font-size:14px;line-height:1.8;">
+        <div style="padding:12px;background:linear-gradient(135deg, rgba(72,199,116,0.1), rgba(59,130,246,0.1));border-radius:12px;margin-bottom:12px;">
+          <div style="font-weight:700;margin-bottom:8px;">🔥 Best Time to Exercise While Fasting:</div>
+          <div id="optimizer-advice">Start a fast to see personalized exercise timing advice!</div>
+        </div>
+        <div style="padding:12px;background:rgba(139,92,246,0.08);border-radius:12px;">
+          <div style="font-weight:700;margin-bottom:8px;">📋 General Guidelines:</div>
+          <ul style="margin:0;padding-left:20px;font-size:13px;">
+            <li><strong>0-8h fasted:</strong> Any exercise — full energy available</li>
+            <li><strong>8-12h fasted:</strong> Great for moderate cardio — fat burning zone 🔥</li>
+            <li><strong>12-16h fasted:</strong> Light to moderate — walking, yoga, swimming</li>
+            <li><strong>16-20h fasted:</strong> Light only — walking, stretching</li>
+            <li><strong>20h+ fasted:</strong> Rest or very light movement only</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Library -->
+    <div class="card">
+      <div class="card-title">📚 Workout Library</div>
+      <div id="workout-library">
+        <div class="workout-card" onclick="toggleWorkout(this)">
+          <div class="workout-header">
+            <span>🏃 Quick Cardio Blast</span>
+            <span class="workout-meta">15 min • 🔥 High</span>
+          </div>
+          <div class="workout-body">
+            <div class="exercise-item">1. Jumping Jacks — 60 sec</div>
+            <div class="exercise-item">2. High Knees — 45 sec</div>
+            <div class="exercise-item">3. Burpees — 30 sec</div>
+            <div class="exercise-item">4. Mountain Climbers — 45 sec</div>
+            <div class="exercise-item">5. Rest — 30 sec</div>
+            <div class="exercise-item">6. Repeat 3x</div>
+            <button class="btn btn-primary" onclick="event.stopPropagation();startWorkoutTimer(15)" style="width:100%;margin-top:12px;">▶️ Start Timer (15 min)</button>
+          </div>
+        </div>
+        <div class="workout-card" onclick="toggleWorkout(this)">
+          <div class="workout-header">
+            <span>🏋️ Full Body Strength</span>
+            <span class="workout-meta">30 min • 💪 Moderate</span>
+          </div>
+          <div class="workout-body">
+            <div class="exercise-item">1. Push-ups — 3×12</div>
+            <div class="exercise-item">2. Squats — 3×15</div>
+            <div class="exercise-item">3. Lunges — 3×10 each leg</div>
+            <div class="exercise-item">4. Plank — 3×45 sec</div>
+            <div class="exercise-item">5. Dumbbell Rows — 3×12</div>
+            <div class="exercise-item">6. Glute Bridges — 3×15</div>
+            <button class="btn btn-primary" onclick="event.stopPropagation();startWorkoutTimer(30)" style="width:100%;margin-top:12px;">▶️ Start Timer (30 min)</button>
+          </div>
+        </div>
+        <div class="workout-card" onclick="toggleWorkout(this)">
+          <div class="workout-header">
+            <span>🧘 Fasting-Friendly Yoga</span>
+            <span class="workout-meta">20 min • 😌 Light</span>
+          </div>
+          <div class="workout-body">
+            <div class="exercise-item">1. Cat-Cow Stretch — 60 sec</div>
+            <div class="exercise-item">2. Downward Dog — 45 sec</div>
+            <div class="exercise-item">3. Warrior I — 30 sec each side</div>
+            <div class="exercise-item">4. Warrior II — 30 sec each side</div>
+            <div class="exercise-item">5. Tree Pose — 30 sec each side</div>
+            <div class="exercise-item">6. Child's Pose — 60 sec</div>
+            <div class="exercise-item">7. Savasana — 2 min</div>
+            <button class="btn btn-primary" onclick="event.stopPropagation();startWorkoutTimer(20)" style="width:100%;margin-top:12px;">▶️ Start Timer (20 min)</button>
+          </div>
+        </div>
+        <div class="workout-card" onclick="toggleWorkout(this)">
+          <div class="workout-header">
+            <span>🏊 Swim Workout</span>
+            <span class="workout-meta">30 min • 💪 Moderate</span>
+          </div>
+          <div class="workout-body">
+            <div class="exercise-item">1. Warm-up: Easy freestyle — 4 laps</div>
+            <div class="exercise-item">2. Freestyle sprints — 2 laps × 4 sets</div>
+            <div class="exercise-item">3. Backstroke — 4 laps</div>
+            <div class="exercise-item">4. Breaststroke — 4 laps</div>
+            <div class="exercise-item">5. Kick drills (with board) — 4 laps</div>
+            <div class="exercise-item">6. Cool-down: Easy backstroke — 2 laps</div>
+            <button class="btn btn-primary" onclick="event.stopPropagation();startWorkoutTimer(30)" style="width:100%;margin-top:12px;">▶️ Start Timer (30 min)</button>
+          </div>
+        </div>
+        <div class="workout-card" onclick="toggleWorkout(this)">
+          <div class="workout-header">
+            <span>⚡ HIIT Fat Burner</span>
+            <span class="workout-meta">20 min • 🔥 High</span>
+          </div>
+          <div class="workout-body">
+            <div class="exercise-item">1. Sprint in place — 30 sec</div>
+            <div class="exercise-item">2. Rest — 15 sec</div>
+            <div class="exercise-item">3. Squat jumps — 30 sec</div>
+            <div class="exercise-item">4. Rest — 15 sec</div>
+            <div class="exercise-item">5. Push-up to plank — 30 sec</div>
+            <div class="exercise-item">6. Rest — 15 sec</div>
+            <div class="exercise-item">7. Repeat 5 rounds</div>
+            <button class="btn btn-primary" onclick="event.stopPropagation();startWorkoutTimer(20)" style="width:100%;margin-top:12px;">▶️ Start Timer (20 min)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Activity Log -->
+    <div class="card">
+      <div class="card-title">📋 Today's Activities</div>
+      <div id="activity-log-today" style="font-size:14px;color:var(--gray);text-align:center;padding:16px;">No activities logged today</div>
+      <div id="activity-today-summary" style="display:none;padding:12px;background:linear-gradient(135deg, rgba(255,107,107,0.08), rgba(139,92,246,0.08));border-radius:12px;margin-top:8px;">
+        <div style="display:flex;justify-content:space-around;text-align:center;">
+          <div><div style="font-size:20px;font-weight:800;color:var(--coral);" id="today-total-mins">0</div><div style="font-size:11px;color:var(--gray);">Minutes</div></div>
+          <div><div style="font-size:20px;font-weight:800;color:var(--purple);" id="today-total-cals">0</div><div style="font-size:11px;color:var(--gray);">Calories</div></div>
+          <div><div style="font-size:20px;font-weight:800;color:var(--green);" id="today-total-count">0</div><div style="font-size:11px;color:var(--gray);">Activities</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- SCREEN 4: Weight Tracker -->
   <div id="screen-weight" class="screen">
     <div class="card">
@@ -1067,6 +1327,10 @@ FEATURES:
   <button class="nav-tab" id="nav-cycle" onclick="switchTab('cycle')">
     <span class="nav-icon">🧬</span>
     <span class="nav-label">Cycle</span>
+  </button>
+  <button class="nav-tab" id="nav-activity" onclick="switchTab('activity')">
+    <span class="nav-icon">💪</span>
+    <span class="nav-label">Activity</span>
   </button>
   <button class="nav-tab" id="nav-weight" onclick="switchTab('weight')">
     <span class="nav-icon">📉</span>
@@ -1720,6 +1984,9 @@ function switchTab(tab) {
     }
   } else if (tab === 'cycle') {
     showScreen('screen-cycle');
+  } else if (tab === 'activity') {
+    showScreen('screen-activity');
+    loadActivityData();
   } else if (tab === 'weight') {
     showScreen('screen-weight');
     loadWeightData();
@@ -2430,6 +2697,210 @@ function updateGreeting() {
   }
 }
 
+// ===== ACTIVITY TRACKER =====
+let selectedActivityType = null;
+let selectedActivityCal = 0;
+
+function selectActivity(btn, type) {
+  document.querySelectorAll('.activity-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedActivityType = type;
+  selectedActivityCal = parseInt(btn.getAttribute('data-cal')) || 5;
+  updateCalEstimate();
+}
+
+function updateCalEstimate() {
+  const duration = parseInt(document.getElementById('activity-duration').value) || 0;
+  const intensity = document.getElementById('activity-intensity').value;
+  const multiplier = intensity === 'light' ? 0.7 : intensity === 'intense' ? 1.4 : 1;
+  const cals = Math.round(selectedActivityCal * duration * multiplier);
+  document.getElementById('activity-cal-estimate').textContent = cals + ' cal';
+}
+
+// Update calorie estimate when duration or intensity changes
+document.getElementById('activity-duration').addEventListener('input', updateCalEstimate);
+document.getElementById('activity-intensity').addEventListener('change', updateCalEstimate);
+
+function saveActivityGoal() {
+  const goal = parseInt(document.getElementById('activity-goal-input').value) || 30;
+  localStorage.setItem('fasttrack_activity_goal', goal);
+  loadActivityData();
+}
+
+function logActivity() {
+  if (!selectedActivityType) {
+    alert('Please select an activity type!');
+    return;
+  }
+  const duration = parseInt(document.getElementById('activity-duration').value);
+  if (!duration || duration < 1) {
+    alert('Please enter a duration!');
+    return;
+  }
+  const intensity = document.getElementById('activity-intensity').value;
+  const multiplier = intensity === 'light' ? 0.7 : intensity === 'intense' ? 1.4 : 1;
+  const calories = Math.round(selectedActivityCal * duration * multiplier);
+  
+  const today = new Date().toDateString();
+  let activities = {};
+  try { activities = JSON.parse(localStorage.getItem('fasttrack_activities')) || {}; } catch(e) {}
+  if (!activities[today]) activities[today] = [];
+  
+  activities[today].push({
+    type: selectedActivityType,
+    duration: duration,
+    intensity: intensity,
+    calories: calories,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+  });
+  
+  localStorage.setItem('fasttrack_activities', JSON.stringify(activities));
+  
+  // Reset form
+  document.querySelectorAll('.activity-type-btn').forEach(b => b.classList.remove('selected'));
+  selectedActivityType = null;
+  selectedActivityCal = 0;
+  document.getElementById('activity-duration').value = '';
+  document.getElementById('activity-cal-estimate').textContent = '0 cal';
+  
+  loadActivityData();
+}
+
+function loadActivityData() {
+  const today = new Date().toDateString();
+  const goal = parseInt(localStorage.getItem('fasttrack_activity_goal')) || 30;
+  document.getElementById('activity-goal-input').value = goal;
+  
+  let activities = {};
+  try { activities = JSON.parse(localStorage.getItem('fasttrack_activities')) || {}; } catch(e) {}
+  const todayActivities = activities[today] || [];
+  
+  // Calculate totals
+  let totalMins = 0, totalCals = 0;
+  todayActivities.forEach(a => {
+    totalMins += a.duration;
+    totalCals += a.calories;
+  });
+  
+  // Update goal ring
+  const pct = Math.min(100, Math.round((totalMins / goal) * 100));
+  const circumference = 2 * Math.PI * 65; // ~408
+  const offset = circumference * (1 - pct / 100);
+  document.getElementById('activity-goal-ring').setAttribute('stroke-dashoffset', offset);
+  document.getElementById('activity-goal-pct').textContent = pct + '%';
+  document.getElementById('activity-goal-mins').textContent = totalMins + ' / ' + goal + ' min';
+  
+  // Color based on progress
+  const color = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--blue)' : 'var(--coral)';
+  document.getElementById('activity-goal-ring').setAttribute('stroke', color);
+  document.getElementById('activity-goal-pct').style.color = color;
+  
+  // Update today's log
+  const logEl = document.getElementById('activity-log-today');
+  const summaryEl = document.getElementById('activity-today-summary');
+  
+  if (todayActivities.length === 0) {
+    logEl.innerHTML = '<div style="color:var(--gray);text-align:center;padding:16px;">No activities logged today</div>';
+    summaryEl.style.display = 'none';
+  } else {
+    const activityEmojis = {
+      walking: '🚶', running: '🏃', gym: '🏋️', yoga: '🧘',
+      swimming: '🏊', cycling: '🚴', hiit: '⚡', stretching: '🤸',
+      dancing: '💃', sports: '⚽'
+    };
+    let html = '';
+    todayActivities.forEach((a, i) => {
+      const emoji = activityEmojis[a.type] || '💪';
+      html += '<div class="activity-log-item">' +
+        '<span>' + emoji + ' ' + a.type.charAt(0).toUpperCase() + a.type.slice(1) + ' • ' + a.time + '</span>' +
+        '<span><strong>' + a.duration + ' min</strong> • ' + a.calories + ' cal' +
+        ' <span onclick="deleteActivity(' + i + ')" style="cursor:pointer;margin-left:4px;">🗑️</span></span>' +
+        '</div>';
+    });
+    logEl.innerHTML = html;
+    summaryEl.style.display = 'block';
+    document.getElementById('today-total-mins').textContent = totalMins;
+    document.getElementById('today-total-cals').textContent = totalCals;
+    document.getElementById('today-total-count').textContent = todayActivities.length;
+  }
+  
+  // Update optimizer
+  updateActivityOptimizer();
+}
+
+function deleteActivity(index) {
+  const today = new Date().toDateString();
+  let activities = {};
+  try { activities = JSON.parse(localStorage.getItem('fasttrack_activities')) || {}; } catch(e) {}
+  if (activities[today]) {
+    activities[today].splice(index, 1);
+    localStorage.setItem('fasttrack_activities', JSON.stringify(activities));
+  }
+  loadActivityData();
+}
+
+function updateActivityOptimizer() {
+  const adviceEl = document.getElementById('optimizer-advice');
+  // Check if currently fasting
+  const timerData = localStorage.getItem('fasttrack_timer');
+  if (timerData) {
+    try {
+      const data = JSON.parse(timerData);
+      if (data.startTime) {
+        const elapsed = Date.now() - data.startTime - (data.totalPausedMs || 0);
+        const elapsedH = elapsed / 3600000;
+        let advice = '';
+        if (elapsedH < 8) {
+          advice = '🟢 <strong>Great time for any exercise!</strong> You have plenty of energy. Try running, gym, swimming, or HIIT for maximum results.';
+        } else if (elapsedH < 12) {
+          advice = '🔥 <strong>Fat burning zone!</strong> Perfect for moderate cardio — walking, cycling, swimming. Your body is actively burning fat for fuel.';
+        } else if (elapsedH < 16) {
+          advice = '🟡 <strong>Light to moderate exercise recommended.</strong> Try walking, yoga, or a gentle swim. Stay hydrated and listen to your body.';
+        } else if (elapsedH < 20) {
+          advice = '🟠 <strong>Light exercise only.</strong> Walking and stretching are ideal. Avoid intense workouts — your body is in deep repair mode.';
+        } else {
+          advice = '🔴 <strong>Rest or very light movement.</strong> A gentle walk is fine, but save intense workouts for your eating window.';
+        }
+        advice += '<br><br>⏱️ You\'re <strong>' + Math.floor(elapsedH) + 'h ' + Math.round((elapsedH % 1) * 60) + 'm</strong> into your fast.';
+        adviceEl.innerHTML = advice;
+        return;
+      }
+    } catch(e) {}
+  }
+  adviceEl.innerHTML = 'Start a fast to see personalized exercise timing advice based on your fasting phase! 🚀';
+}
+
+function toggleWorkout(card) {
+  card.classList.toggle('open');
+}
+
+let workoutTimerInterval = null;
+function startWorkoutTimer(minutes) {
+  if (workoutTimerInterval) clearInterval(workoutTimerInterval);
+  let remaining = minutes * 60;
+  const btn = event.target;
+  btn.textContent = '⏱️ ' + minutes + ':00';
+  btn.style.background = 'var(--green)';
+  
+  workoutTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(workoutTimerInterval);
+      btn.textContent = '✅ Done!';
+      btn.style.background = 'var(--green)';
+      // Auto-log this workout
+      setTimeout(() => {
+        btn.textContent = '▶️ Start Timer (' + minutes + ' min)';
+        btn.style.background = '';
+      }, 3000);
+      return;
+    }
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    btn.textContent = '⏱️ ' + m + ':' + s.toString().padStart(2, '0');
+  }, 1000);
+}
+
 // ===== FEEDING WINDOW COUNTDOWN =====
 let feedState = {
   feedStart: null,
@@ -2553,7 +3024,7 @@ function resumeFeedingWindow() {
 }
 
 // ===== SWIPE NAVIGATION =====
-const tabs = ['timer', 'cycle', 'weight', 'history'];
+const tabs = ['timer', 'cycle', 'activity', 'weight', 'history'];
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
@@ -2616,13 +3087,14 @@ async function backupData() {
     const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal', 
                   'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
                   'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
-                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer'];
+                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer',
+                  'fasttrack_activities', 'fasttrack_activity_goal'];
     keys.forEach(key => {
       const val = localStorage.getItem(key);
       if (val) {
         store.put(val, key);
       } else {
-        store.delete(key);  // Remove from backup if removed from localStorage
+        store.delete(key);
       }
     });
     await new Promise((resolve, reject) => {
@@ -2641,7 +3113,8 @@ async function restoreFromBackup() {
     const keys = ['fasttrack_history', 'fasttrack_weights', 'fasttrack_goal',
                   'fasttrack_bmi', 'fasttrack_plan', 'fasttrack_username',
                   'fasttrack_avatar', 'fasttrack_darkmode', 'fasttrack_darkmode_manual',
-                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer'];
+                  'fasttrack_water', 'fasttrack_feeding', 'fasttrack_timer',
+                  'fasttrack_activities', 'fasttrack_activity_goal'];
     let restored = false;
     for (const key of keys) {
       const val = await new Promise((resolve) => {
