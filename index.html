@@ -663,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.54</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.55</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -2470,72 +2470,63 @@ function getBestStreak(history) {
 
 function drawFastChart(history) {
   const svg = document.getElementById('fast-chart');
-  if (history.length < 2) {
-    svg.innerHTML = '<text x="200" y="90" text-anchor="middle" fill="#94A3B8" font-size="13" font-family="Inter">Complete 2+ fasts to see your chart 📈</text>';
+  if (history.length < 1) {
+    svg.innerHTML = '<text x="200" y="90" text-anchor="middle" fill="#94A3B8" font-size="13" font-family="Inter">Complete a fast to see your chart 📈</text>';
     return;
   }
-  // Show up to 42 days (6 weeks) for a proper graph
   const last42 = history.slice(-42);
   const hours = last42.map(h => h.durationHrs);
-  const maxH = Math.ceil(Math.max(...hours) + 1);
-  const padL = 32, padR = 8, padT = 12, padB = 32;
+  const maxH = Math.ceil(Math.max(...hours) + 2);
+  const padL = 30, padR = 6, padT = 10, padB = 30;
   const chartW = 400 - padL - padR;
   const chartH = 180 - padT - padB;
+  const n = last42.length;
+  const gap = Math.max(1, Math.min(3, Math.floor(40 / n)));
+  const barW = Math.max(4, (chartW / n) - gap);
   
-  let html = '<defs>';
-  html += '<linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient>';
-  html += '<linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.25"/><stop offset="100%" stop-color="#FF6B6B" stop-opacity="0.03"/></linearGradient>';
-  html += '</defs>';
-  
-  // Grid lines
-  const gridLines = 4;
-  for (let i = 0; i <= gridLines; i++) {
-    const y = padT + (i / gridLines) * chartH;
-    const label = Math.round(maxH - (i / gridLines) * maxH);
-    html += '<line x1="' + padL + '" y1="' + y + '" x2="' + (400-padR) + '" y2="' + y + '" stroke="#E2E8F0" stroke-width="0.5" stroke-dasharray="3,3"/>';
-    html += '<text x="' + (padL - 4) + '" y="' + (y + 3) + '" text-anchor="end" fill="#94A3B8" font-size="9" font-family="Inter">' + label + 'h</text>';
+  // Bar colors based on hours fasted
+  function getBarColor(hrs, completed) {
+    if (!completed) return '#FB923C'; // orange for incomplete
+    if (hrs >= 20) return '#8B5CF6';  // purple - deep renewal
+    if (hrs >= 16) return '#48C774';  // green - autophagy
+    if (hrs >= 12) return '#3B82F6';  // blue - fat burning
+    if (hrs >= 8) return '#FF6B6B';   // coral - blood sugar drops
+    return '#FB923C';                  // orange - short fast
   }
   
-  // Calculate points
-  const points = last42.map((h, i) => {
-    const x = padL + (i / (last42.length - 1)) * chartW;
-    const y = padT + chartH - (h.durationHrs / maxH) * chartH;
-    return { x, y, data: h };
-  });
+  let html = '';
   
-  // Area fill
-  let areaPath = 'M' + points[0].x + ',' + points[0].y;
-  for (let i = 1; i < points.length; i++) {
-    const cp1x = points[i-1].x + (points[i].x - points[i-1].x) * 0.3;
-    const cp2x = points[i].x - (points[i].x - points[i-1].x) * 0.3;
-    areaPath += ' C' + cp1x + ',' + points[i-1].y + ' ' + cp2x + ',' + points[i].y + ' ' + points[i].x + ',' + points[i].y;
+  // Grid lines with labels
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (i / 4) * chartH;
+    const label = Math.round(maxH - (i / 4) * maxH);
+    html += '<line x1="' + padL + '" y1="' + y + '" x2="' + (400-padR) + '" y2="' + y + '" stroke="#E2E8F0" stroke-width="0.5"/>';
+    html += '<text x="' + (padL - 4) + '" y="' + (y + 3) + '" text-anchor="end" fill="#94A3B8" font-size="9" font-family="Inter">' + label + '</text>';
   }
-  areaPath += ' L' + points[points.length-1].x + ',' + (padT + chartH) + ' L' + points[0].x + ',' + (padT + chartH) + ' Z';
-  html += '<path d="' + areaPath + '" fill="url(#areaGrad)"/>';
   
-  // Line
-  let linePath = 'M' + points[0].x + ',' + points[0].y;
-  for (let i = 1; i < points.length; i++) {
-    const cp1x = points[i-1].x + (points[i].x - points[i-1].x) * 0.3;
-    const cp2x = points[i].x - (points[i].x - points[i-1].x) * 0.3;
-    linePath += ' C' + cp1x + ',' + points[i-1].y + ' ' + cp2x + ',' + points[i].y + ' ' + points[i].x + ',' + points[i].y;
-  }
-  html += '<path d="' + linePath + '" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round"/>';
-  
-  // Dots
-  points.forEach(p => {
-    const color = p.data.completed ? '#8B5CF6' : '#FB923C';
-    html += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (last42.length > 21 ? 2.5 : 3.5) + '" fill="' + color + '" stroke="#fff" stroke-width="1"/>';
-  });
-  
-  // Date labels (show weekly markers)
-  const labelInterval = last42.length <= 14 ? 2 : last42.length <= 28 ? 7 : 7;
+  // Bars
   last42.forEach((h, i) => {
-    if (i % labelInterval === 0 || i === last42.length - 1) {
-      const x = padL + (i / (last42.length - 1)) * chartW;
+    const x = padL + i * (barW + gap) + gap / 2;
+    const barH = Math.max(2, (h.durationHrs / maxH) * chartH);
+    const y = padT + chartH - barH;
+    const color = getBarColor(h.durationHrs, h.completed);
+    // Rounded top bars
+    html += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" rx="' + Math.min(3, barW/2).toFixed(1) + '" fill="' + color + '" opacity="0.85"/>';
+    
+    // Hours label on top of bar (only if enough space)
+    if (barW >= 12) {
+      html += '<text x="' + (x + barW/2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle" fill="' + color + '" font-size="7" font-weight="700" font-family="Inter">' + Math.round(h.durationHrs) + 'h</text>';
+    }
+  });
+  
+  // Date labels
+  const labelEvery = n <= 7 ? 1 : n <= 14 ? 2 : n <= 28 ? 7 : 7;
+  last42.forEach((h, i) => {
+    if (i % labelEvery === 0 || i === n - 1) {
+      const x = padL + i * (barW + gap) + gap / 2 + barW / 2;
       const d = new Date(h.date);
       const label = (d.getMonth()+1) + '/' + d.getDate();
-      html += '<text x="' + x.toFixed(1) + '" y="' + (padT + chartH + 16) + '" text-anchor="middle" fill="#94A3B8" font-size="8" font-family="Inter">' + label + '</text>';
+      html += '<text x="' + x.toFixed(1) + '" y="' + (padT + chartH + 14) + '" text-anchor="middle" fill="#94A3B8" font-size="7" font-family="Inter">' + label + '</text>';
     }
   });
   
@@ -2544,6 +2535,9 @@ function drawFastChart(history) {
   const avgY = padT + chartH - (avgHrs / maxH) * chartH;
   html += '<line x1="' + padL + '" y1="' + avgY.toFixed(1) + '" x2="' + (400-padR) + '" y2="' + avgY.toFixed(1) + '" stroke="#48C774" stroke-width="1" stroke-dasharray="4,3"/>';
   html += '<text x="' + (400-padR) + '" y="' + (avgY - 4).toFixed(1) + '" text-anchor="end" fill="#48C774" font-size="8" font-weight="600" font-family="Inter">avg ' + avgHrs.toFixed(1) + 'h</text>';
+  
+  // Legend
+  html += '<text x="' + padL + '" y="' + (padT + chartH + 26) + '" fill="#94A3B8" font-size="7" font-family="Inter">🟣20h+ 🟢16h+ 🔵12h+ 🔴8h+ 🟠&lt;8h/incomplete</text>';
   
   svg.innerHTML = html;
 }
