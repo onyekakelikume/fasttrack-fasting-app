@@ -663,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.57</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.58</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1935,6 +1935,26 @@ function resetApp() {
   document.getElementById('timer-elapsed').textContent = '00:00:00';
   document.getElementById('btn-pause').innerHTML = '⏸️ Pause';
   document.getElementById('btn-pause').className = 'btn btn-secondary';
+  
+  // Restore saved plan so user doesn't have to re-select
+  const savedPlan = localStorage.getItem('fasttrack_plan');
+  if (savedPlan) {
+    try {
+      const planData = JSON.parse(savedPlan);
+      state.selectedPlan = planData.plan;
+      state.selectedHours = planData.hours;
+      document.querySelectorAll('.plan-card').forEach(card => {
+        const hours = card.getAttribute('data-hours');
+        if (planData.plan === 'custom' && hours === null) {
+          card.classList.add('selected');
+          document.getElementById('custom-input').classList.add('show');
+          document.getElementById('custom-hours').value = planData.hours;
+        } else if (hours && parseInt(hours) === planData.plan) {
+          card.classList.add('selected');
+        }
+      });
+    } catch(e) {}
+  }
   showScreen('screen-plan');
 }
 
@@ -3315,12 +3335,12 @@ async function initApp() {
       // Highlight the saved plan card
       const planCards = document.querySelectorAll('.plan-card');
       planCards.forEach(card => {
-        const onclick = card.getAttribute('onclick');
-        if (planData.plan === 'custom' && onclick && onclick.includes("'custom'")) {
+        const hours = card.getAttribute('data-hours');
+        if (planData.plan === 'custom' && hours === null) {
           card.classList.add('selected');
           document.getElementById('custom-input').classList.add('show');
           document.getElementById('custom-hours').value = planData.hours;
-        } else if (onclick && onclick.includes(', ' + planData.plan + ')')) {
+        } else if (hours && parseInt(hours) === planData.plan) {
           card.classList.add('selected');
         }
       });
