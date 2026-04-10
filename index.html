@@ -663,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.58</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.59</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1818,27 +1818,40 @@ function updateMultiColorRing(elapsedHours, totalHours) {
     { start: 20, end: 24 }   // Gold — Deep Renewal
   ];
   
+  // Only use phases that fit within the total fast duration
+  const activePhases = phases.filter(p => p.start < totalHours);
+  // Adjust the last active phase to end at totalHours
+  if (activePhases.length > 0) {
+    activePhases[activePhases.length - 1].end = Math.min(activePhases[activePhases.length - 1].end, totalHours);
+  }
+  
   for (let i = 0; i < phases.length; i++) {
     const ring = document.getElementById('ring-phase-' + i);
     const phase = phases[i];
     
-    // How much of the total fast does this phase represent?
+    // Skip phases beyond the fast duration
+    if (phase.start >= totalHours) {
+      ring.setAttribute('stroke-dasharray', '0 ' + circumference);
+      ring.setAttribute('stroke-dashoffset', '0');
+      continue;
+    }
+    
+    const effectiveEnd = Math.min(phase.end, totalHours);
     const phaseStartFraction = phase.start / totalHours;
-    const phaseEndFraction = Math.min(phase.end / totalHours, 1);
+    const phaseEndFraction = effectiveEnd / totalHours;
     const phaseLength = (phaseEndFraction - phaseStartFraction) * circumference;
     
     if (elapsedHours <= phase.start) {
-      // Haven't reached this phase yet — hide it
       ring.setAttribute('stroke-dasharray', '0 ' + circumference);
       ring.setAttribute('stroke-dashoffset', '0');
-    } else if (elapsedHours >= phase.end) {
-      // Completed this phase — show full segment
-      const gapAfter = circumference - phaseLength;
-      ring.setAttribute('stroke-dasharray', phaseLength + ' ' + gapAfter);
+    } else if (elapsedHours >= effectiveEnd) {
+      // Completed — add tiny overlap (0.5px) to close gaps between segments
+      const filledLength = phaseLength + 0.5;
+      const gapAfter = circumference - filledLength;
+      ring.setAttribute('stroke-dasharray', filledLength + ' ' + gapAfter);
       ring.setAttribute('stroke-dashoffset', -(phaseStartFraction * circumference));
     } else {
-      // Currently in this phase — partially fill
-      const phaseProgress = (elapsedHours - phase.start) / (phase.end - phase.start);
+      const phaseProgress = (elapsedHours - phase.start) / (effectiveEnd - phase.start);
       const filledLength = phaseProgress * phaseLength;
       const gapAfter = circumference - filledLength;
       ring.setAttribute('stroke-dasharray', filledLength + ' ' + gapAfter);
