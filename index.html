@@ -663,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.59</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.60</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1622,7 +1622,7 @@ function breakFast() {
   const stopDateVal = document.getElementById('stop-date').value;
   let stopTime;
   if (stopTimeVal && stopDateVal) {
-    stopTime = new Date(stopDateVal + 'T' + stopTimeVal).getTime();
+    stopTime = new Date(stopDateVal + 'T' + stopTimeVal + ':00').getTime();
   } else if (stopTimeVal) {
     const now = new Date();
     const [hh, mm] = stopTimeVal.split(':').map(Number);
@@ -1631,9 +1631,21 @@ function breakFast() {
   } else {
     stopTime = Date.now();
   }
-  // Don't allow stop time before start time
+  // Validate stop time
+  if (isNaN(stopTime)) {
+    alert('Invalid time entered. Please try again.');
+    showBreakModal();
+    return;
+  }
   if (stopTime < state.startTime) {
-    alert('Stop time cannot be before start time!');
+    const startStr = new Date(state.startTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    alert('Stop time cannot be before your start time (' + startStr + '). Please check the date and time.');
+    showBreakModal();
+    return;
+  }
+  // Don't allow stop time in the future (more than 1 min ahead)
+  if (stopTime > Date.now() + 60000) {
+    alert('Stop time cannot be in the future. Please enter when you actually stopped fasting.');
     showBreakModal();
     return;
   }
