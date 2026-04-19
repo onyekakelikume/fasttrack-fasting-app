@@ -663,7 +663,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.61</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.62</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -2821,21 +2821,34 @@ function toggleDarkMode() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
   localStorage.setItem('fasttrack_dark', isDark ? '1' : '0');
-  localStorage.setItem('fasttrack_darkmode_manual', '1');
+  // Save the date of the manual override so it expires after that day
+  localStorage.setItem('fasttrack_darkmode_manual', new Date().toDateString());
   manualDarkOverride = true;
   document.getElementById('dark-toggle').textContent = isDark ? '☀️' : '🌙';
 }
 
 function checkAutoDarkMode() {
-  if (manualDarkOverride) return;
+  // Check if manual override has expired (different day = expired)
+  if (manualDarkOverride) {
+    const overrideDate = localStorage.getItem('fasttrack_darkmode_manual');
+    if (overrideDate && overrideDate !== new Date().toDateString()) {
+      // Override was from a previous day — clear it
+      manualDarkOverride = false;
+      localStorage.removeItem('fasttrack_darkmode_manual');
+    } else {
+      return; // Still same day, respect manual override
+    }
+  }
   const h = new Date().getHours();
   const shouldBeDark = h >= 18 || h < 6;
   const isDark = document.body.classList.contains('dark');
   if (shouldBeDark && !isDark) {
     document.body.classList.add('dark');
+    localStorage.setItem('fasttrack_dark', '1');
     document.getElementById('dark-toggle').textContent = '☀️';
   } else if (!shouldBeDark && isDark) {
     document.body.classList.remove('dark');
+    localStorage.setItem('fasttrack_dark', '0');
     document.getElementById('dark-toggle').textContent = '🌙';
   }
 }
@@ -2843,32 +2856,31 @@ function checkAutoDarkMode() {
 // Check auto dark mode every minute
 setInterval(checkAutoDarkMode, 60000);
 
-// Load dark mode preference — auto dark after 6pm, auto light before 6pm
-const manualDark = localStorage.getItem('fasttrack_darkmode_manual');
+// Load dark mode on startup
+const manualDarkDate = localStorage.getItem('fasttrack_darkmode_manual');
 const hour = new Date().getHours();
 const autoDark = hour >= 18 || hour < 6;
-const savedDark = localStorage.getItem('fasttrack_dark');
-if (manualDark === '1' && savedDark !== null) {
+if (manualDarkDate && manualDarkDate === new Date().toDateString()) {
+  // Manual override from today — respect it
   manualDarkOverride = true;
-  if (savedDark === '1') {
+  if (localStorage.getItem('fasttrack_dark') === '1') {
     document.body.classList.add('dark');
     document.getElementById('dark-toggle').textContent = '☀️';
   }
-} else if (autoDark) {
-  document.body.classList.add('dark');
-  document.getElementById('dark-toggle').textContent = '☀️';
-}
-
-// Reset manual override at midnight so auto mode resumes next day
-function checkMidnightReset() {
-  const now = new Date();
-  if (now.getHours() === 0 && now.getMinutes() === 0) {
-    manualDarkOverride = false;
-    localStorage.removeItem('fasttrack_darkmode_manual');
-    checkAutoDarkMode();
+} else {
+  // No valid manual override — use auto mode
+  localStorage.removeItem('fasttrack_darkmode_manual');
+  manualDarkOverride = false;
+  if (autoDark) {
+    document.body.classList.add('dark');
+    localStorage.setItem('fasttrack_dark', '1');
+    document.getElementById('dark-toggle').textContent = '☀️';
+  } else {
+    document.body.classList.remove('dark');
+    localStorage.setItem('fasttrack_dark', '0');
+    document.getElementById('dark-toggle').textContent = '🌙';
   }
 }
-setInterval(checkMidnightReset, 60000);
 
 // ===== WATER TRACKER =====
 function getWaterData() {
