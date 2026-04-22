@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.63</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.64</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -3276,17 +3276,23 @@ function startWorkoutTimer(minutes) {
 
 // ===== IN-APP REMINDERS & NOTIFICATIONS =====
 let notifQueue = [];
+let notifShowing = false;
 let notifTimeout = null;
-let lastNotifKey = '';
 
 function showNotif(icon, title, msg, duration) {
-  const key = title + msg;
-  if (key === lastNotifKey) return; // Don't repeat same notification
-  lastNotifKey = key;
+  // Queue notifications instead of dropping them
+  notifQueue.push({ icon, title, msg, duration: duration || 8000 });
+  if (!notifShowing) processNotifQueue();
+}
+
+function processNotifQueue() {
+  if (notifQueue.length === 0) { notifShowing = false; return; }
+  notifShowing = true;
+  const n = notifQueue.shift();
   
-  document.getElementById('notif-icon').textContent = icon;
-  document.getElementById('notif-title').textContent = title;
-  document.getElementById('notif-msg').textContent = msg;
+  document.getElementById('notif-icon').textContent = n.icon;
+  document.getElementById('notif-title').textContent = n.title;
+  document.getElementById('notif-msg').textContent = n.msg;
   document.getElementById('notif-banner').classList.add('show');
   
   // Play subtle sound
@@ -3304,12 +3310,14 @@ function showNotif(icon, title, msg, duration) {
   } catch(e) {}
   
   if (notifTimeout) clearTimeout(notifTimeout);
-  notifTimeout = setTimeout(dismissNotif, duration || 8000);
+  notifTimeout = setTimeout(dismissNotif, n.duration);
 }
 
 function dismissNotif() {
   document.getElementById('notif-banner').classList.remove('show');
   if (notifTimeout) clearTimeout(notifTimeout);
+  // Show next queued notification after a short gap
+  setTimeout(processNotifQueue, 600);
 }
 
 // Motivational quotes
@@ -3329,7 +3337,6 @@ const motivationalQuotes = [
 function checkReminders() {
   const now = new Date();
   const hour = now.getHours();
-  const minute = now.getMinutes();
   const today = now.toDateString();
   
   // Track which reminders we've shown today
@@ -3340,27 +3347,29 @@ function checkReminders() {
     shownToday = { _date: today };
   }
   
-  // 1. MORNING MOTIVATION (7-8am)
-  if (hour === 7 && !shownToday.morning) {
+  // 1. MORNING MOTIVATION (7am - 9am, show once)
+  if (hour >= 7 && hour < 9 && !shownToday.morning) {
     const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
     showNotif('🌅', 'Good Morning!', quote, 10000);
     shownToday.morning = true;
   }
   
-  // 2. HYDRATION REMINDERS (9am, 12pm, 3pm, 6pm)
+  // 2. HYDRATION REMINDERS (9am, 12pm, 3pm, 6pm — full hour window each)
   const waterHours = [9, 12, 15, 18];
-  if (waterHours.includes(hour) && minute < 2 && !shownToday['water_' + hour]) {
-    const waterData = JSON.parse(localStorage.getItem('fasttrack_water') || '{}');
-    const todayWater = waterData[today] || 0;
-    if (todayWater < 8) {
-      const remaining = 8 - todayWater;
-      showNotif('💧', 'Hydration Check!', 'You\'ve had ' + todayWater + '/8 glasses today. ' + remaining + ' more to go! Stay hydrated.', 8000);
-      shownToday['water_' + hour] = true;
+  waterHours.forEach(wh => {
+    if (hour === wh && !shownToday['water_' + wh]) {
+      const waterData = JSON.parse(localStorage.getItem('fasttrack_water') || '{}');
+      const todayWater = waterData[today] || 0;
+      if (todayWater < 8) {
+        const remaining = 8 - todayWater;
+        showNotif('💧', 'Hydration Check!', 'You\'ve had ' + todayWater + '/8 glasses today. ' + remaining + ' more to go! Stay hydrated.', 8000);
+        shownToday['water_' + wh] = true;
+      }
     }
-  }
+  });
   
-  // 3. WEIGH-IN REMINDER (8am)
-  if (hour === 8 && minute < 2 && !shownToday.weighin) {
+  // 3. WEIGH-IN REMINDER (7am - 10am, show once if not logged today)
+  if (hour >= 7 && hour < 10 && !shownToday.weighin) {
     const weights = JSON.parse(localStorage.getItem('fasttrack_weights') || '[]');
     const todayWeight = weights.find(w => new Date(w.date).toDateString() === today);
     if (!todayWeight) {
@@ -3369,17 +3378,19 @@ function checkReminders() {
     }
   }
   
-  // 4. FORGOT TO START FASTING? (check if feeding window ended 1+ hour ago)
+  // 4. FORGOT TO START FASTING? (1+ hours after feeding window ended, up to 12h)
   if (!state.startTime || state.completed) {
-    const feedStart = localStorage.getItem('fasttrack_feeding');
-    if (feedStart) {
+    const feedRaw = localStorage.getItem('fasttrack_feeding');
+    if (feedRaw) {
       try {
-        const feedData = JSON.parse(feedStart);
+        const feedData = JSON.parse(feedRaw);
         if (feedData.feedStart && feedData.feedDurationMs) {
           const feedEnd = feedData.feedStart + feedData.feedDurationMs;
           const hoursSinceFeedEnd = (Date.now() - feedEnd) / 3600000;
-          if (hoursSinceFeedEnd >= 1 && hoursSinceFeedEnd < 2 && !shownToday.forgotStart) {
-            showNotif('🤔', 'Did you forget to start fasting?', 'Your eating window ended ' + Math.round(hoursSinceFeedEnd) + ' hour ago. Tap Timer to start your fast!', 12000);
+          if (hoursSinceFeedEnd >= 1 && hoursSinceFeedEnd < 12 && !shownToday.forgotStart) {
+            const h = Math.floor(hoursSinceFeedEnd);
+            const label = h === 1 ? '1 hour' : h + ' hours';
+            showNotif('🤔', 'Did you forget to start fasting?', 'Your eating window ended ' + label + ' ago. Tap Timer to start your fast!', 12000);
             shownToday.forgotStart = true;
           }
         }
@@ -3387,18 +3398,19 @@ function checkReminders() {
     }
   }
   
-  // 5. FORGOT TO STOP FASTING? (1 hour past goal)
+  // 5. FORGOT TO STOP FASTING? (1+ hours past goal, up to 12h)
   if (state.startTime && !state.completed && state.totalMs > 0) {
     const elapsed = Date.now() - state.startTime - (state.totalPausedMs || 0);
     const overtime = elapsed - state.totalMs;
-    if (overtime >= 3600000 && overtime < 7200000 && !shownToday.forgotStop) {
+    if (overtime >= 3600000 && overtime < 43200000 && !shownToday.forgotStop) {
       const overtimeH = Math.floor(overtime / 3600000);
-      showNotif('🤔', 'Did you forget to stop fasting?', 'You\'re ' + overtimeH + ' hour past your ' + state.selectedHours + 'h goal. Tap Stop Fast if you\'ve already eaten!', 12000);
+      const label = overtimeH === 1 ? '1 hour' : overtimeH + ' hours';
+      showNotif('🤔', 'Did you forget to stop fasting?', 'You\'re ' + label + ' past your ' + state.selectedHours + 'h goal. Tap Stop Fast if you\'ve already eaten!', 12000);
       shownToday.forgotStop = true;
     }
   }
   
-  // 6. MILESTONE ALERTS (during active fast)
+  // 6. MILESTONE ALERTS (during active fast — 1 hour window each so you never miss)
   if (state.startTime && !state.completed) {
     const elapsed = Date.now() - state.startTime - (state.totalPausedMs || 0);
     const elapsedH = elapsed / 3600000;
@@ -3412,23 +3424,24 @@ function checkReminders() {
     ];
     
     milestones.forEach(m => {
-      if (elapsedH >= m.hours && elapsedH < m.hours + 0.05 && !shownToday['milestone_' + m.hours]) {
+      if (elapsedH >= m.hours && elapsedH < m.hours + 1 && !shownToday['milestone_' + m.hours]) {
         showNotif(m.icon, m.title, m.msg, 12000);
         shownToday['milestone_' + m.hours] = true;
       }
     });
   }
   
-  // 7. EATING WINDOW CLOSING SOON (30 min before)
-  const feedData = localStorage.getItem('fasttrack_feeding');
-  if (feedData) {
+  // 7. EATING WINDOW CLOSING SOON (30 min before — 5 min window)
+  const feedData2 = localStorage.getItem('fasttrack_feeding');
+  if (feedData2) {
     try {
-      const fd = JSON.parse(feedData);
+      const fd = JSON.parse(feedData2);
       if (fd.feedStart && fd.feedDurationMs) {
         const feedEnd = fd.feedStart + fd.feedDurationMs;
         const timeLeft = feedEnd - Date.now();
-        if (timeLeft > 0 && timeLeft <= 1800000 && timeLeft > 1740000 && !shownToday.feedClosing) {
-          showNotif('🍽️', 'Eating Window Closing Soon!', 'You have about 30 minutes left in your eating window. Finish up your meal!', 10000);
+        if (timeLeft > 0 && timeLeft <= 1800000 && !shownToday.feedClosing) {
+          const minsLeft = Math.round(timeLeft / 60000);
+          showNotif('🍽️', 'Eating Window Closing Soon!', 'You have about ' + minsLeft + ' minutes left in your eating window. Finish up your meal!', 10000);
           shownToday.feedClosing = true;
         }
       }
@@ -3440,10 +3453,12 @@ function checkReminders() {
 
 // Check reminders every 30 seconds
 setInterval(checkReminders, 30000);
-// Also check on app resume
+// Run immediately on page load
+setTimeout(checkReminders, 1500);
+// Also check on app resume/reopen
 document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') {
-    setTimeout(checkReminders, 2000);
+    setTimeout(checkReminders, 1000);
   }
 });
 
