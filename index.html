@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.66</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.67</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1205,10 +1205,17 @@ FEATURES:
       </div>
     </div>
 
-    <!-- Quick Add Common Foods -->
+    <!-- Quick Add Foods (with category tabs) -->
     <div class="card">
       <div class="card-title">⚡ Quick Add</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="quick-food-list">
+      <div style="display:flex;gap:6px;margin-bottom:12px;background:var(--light-gray);padding:4px;border-radius:10px;">
+        <button class="food-cat-btn active" data-cat="common" onclick="switchFoodCategory('common')" style="flex:1;padding:8px;border:none;background:#fff;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);">🌎 Common</button>
+        <button class="food-cat-btn" data-cat="nigerian" onclick="switchFoodCategory('nigerian')" style="flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;color:var(--gray);">🇳🇬 Nigerian</button>
+        <button class="food-cat-btn" data-cat="drinks" onclick="switchFoodCategory('drinks')" style="flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;color:var(--gray);">🥤 Drinks</button>
+      </div>
+
+      <!-- Common foods -->
+      <div class="food-cat-panel" id="food-cat-common" style="display:flex;flex-wrap:wrap;gap:8px;">
         <button class="activity-type-btn" onclick="quickAddFood('Egg', 78)">🥚 Egg <small style="opacity:.7;">78</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Banana', 105)">🍌 Banana <small style="opacity:.7;">105</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Apple', 95)">🍎 Apple <small style="opacity:.7;">95</small></button>
@@ -1221,8 +1228,75 @@ FEATURES:
         <button class="activity-type-btn" onclick="quickAddFood('Sweet Potato', 112)">🍠 S.Potato <small style="opacity:.7;">112</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Salad Bowl', 200)">🥗 Salad <small style="opacity:.7;">200</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Almonds (1oz)', 164)">🌰 Almonds <small style="opacity:.7;">164</small></button>
-        <button class="activity-type-btn" onclick="quickAddFood('Coffee w/ Milk', 40)">☕ Coffee <small style="opacity:.7;">40</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('First Watch Power Wrap', 720)">🌯 Power Wrap <small style="opacity:.7;">720</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Protein Shake', 160)">🥤 Shake <small style="opacity:.7;">160</small></button>
+      </div>
+
+      <!-- Nigerian foods -->
+      <div class="food-cat-panel" id="food-cat-nigerian" style="display:none;flex-wrap:wrap;gap:8px;">
+        <button class="activity-type-btn" onclick="quickAddFood('Jollof Rice (1 cup)', 330)">🍚 Jollof Rice <small style="opacity:.7;">330</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Fried Rice (1 cup)', 350)">🍛 Fried Rice <small style="opacity:.7;">350</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Egusi Soup (1 cup)', 380)">🥣 Egusi Soup <small style="opacity:.7;">380</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Ogbono Soup (1 cup)', 340)">🥘 Ogbono <small style="opacity:.7;">340</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Efo Riro (1 cup)', 220)">🥬 Efo Riro <small style="opacity:.7;">220</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Edikang Ikong (1 cup)', 280)">🌿 Edikang Ikong <small style="opacity:.7;">280</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Okra Soup (1 cup)', 200)">🫛 Okra Soup <small style="opacity:.7;">200</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Bitter Leaf Soup (1 cup)', 250)">🍃 Bitter Leaf <small style="opacity:.7;">250</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Afang Soup (1 cup)', 290)">🌱 Afang <small style="opacity:.7;">290</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pepper Soup (Catfish)', 280)">🌶️ Pepper Soup <small style="opacity:.7;">280</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Banga Soup (1 cup)', 400)">🌰 Banga Soup <small style="opacity:.7;">400</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Nsala/White Soup (1 cup)', 260)">🤍 Nsala Soup <small style="opacity:.7;">260</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pounded Yam (1 cup)', 340)">🥔 Pounded Yam <small style="opacity:.7;">340</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Eba/Garri (1 cup)', 360)">🟡 Eba/Garri <small style="opacity:.7;">360</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Amala (1 cup)', 220)">⚫ Amala <small style="opacity:.7;">220</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Fufu (1 cup)', 320)">⚪ Fufu <small style="opacity:.7;">320</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Semo (1 cup)', 300)">🌾 Semo <small style="opacity:.7;">300</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Boiled Yam (1 cup)', 158)">🍠 Boiled Yam <small style="opacity:.7;">158</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Yam Porridge/Asaro (1 cup)', 280)">🍲 Asaro <small style="opacity:.7;">280</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Beans/Ewa (1 cup)', 240)">🫘 Beans/Ewa <small style="opacity:.7;">240</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Moi Moi (1 wrap)', 180)">🟠 Moi Moi <small style="opacity:.7;">180</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Akara (3 pcs)', 240)">🟤 Akara <small style="opacity:.7;">240</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Plantain (fried, 1 cup)', 320)">🍌 Fried Plantain <small style="opacity:.7;">320</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Boli/Roasted Plantain', 180)">🔥 Boli <small style="opacity:.7;">180</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Suya (4oz)', 280)">🥩 Suya <small style="opacity:.7;">280</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Grilled Fish (Tilapia)', 220)">🐟 Grilled Fish <small style="opacity:.7;">220</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Nkwobi (1 serving)', 420)">🐄 Nkwobi <small style="opacity:.7;">420</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Isi Ewu (1 serving)', 480)">🐐 Isi Ewu <small style="opacity:.7;">480</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Goat Meat Stew (1 cup)', 340)">🐐 Goat Stew <small style="opacity:.7;">340</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chicken Stew (1 cup)', 260)">🍗 Chicken Stew <small style="opacity:.7;">260</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Beef Stew (1 cup)', 320)">🥩 Beef Stew <small style="opacity:.7;">320</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Efo Elegusi Stew (1 cup)', 300)">🥗 Efo Elegusi <small style="opacity:.7;">300</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Ayamase/Ofada Stew', 380)">🌶️ Ayamase <small style="opacity:.7;">380</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Ofada Rice (1 cup)', 220)">🌾 Ofada Rice <small style="opacity:.7;">220</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Coconut Rice (1 cup)', 350)">🥥 Coconut Rice <small style="opacity:.7;">350</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Beans & Plantain', 420)">🍛 Beans+Plantain <small style="opacity:.7;">420</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pepper Stew (1 cup)', 180)">🌶️ Pepper Stew <small style="opacity:.7;">180</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Nigerian Salad', 320)">🥗 NG Salad <small style="opacity:.7;">320</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Meat Pie', 380)">🥟 Meat Pie <small style="opacity:.7;">380</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Puff Puff (3 pcs)', 220)">🟠 Puff Puff <small style="opacity:.7;">220</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chin Chin (small bowl)', 260)">🟨 Chin Chin <small style="opacity:.7;">260</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Buns (2 pcs)', 240)">🍩 Buns <small style="opacity:.7;">240</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pap/Akamu (1 cup)', 140)">🥣 Pap/Akamu <small style="opacity:.7;">140</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Boiled Egg', 78)">🥚 Boiled Egg <small style="opacity:.7;">78</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Egg Sauce', 220)">🍳 Egg Sauce <small style="opacity:.7;">220</small></button>
+      </div>
+
+      <!-- Drinks -->
+      <div class="food-cat-panel" id="food-cat-drinks" style="display:none;flex-wrap:wrap;gap:8px;">
+        <button class="activity-type-btn" onclick="quickAddFood('Cold Brew (black)', 5)">☕ Cold Brew <small style="opacity:.7;">5</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Black Coffee', 5)">☕ Black Coffee <small style="opacity:.7;">5</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Coffee w/ Milk', 40)">🥛 Coffee+Milk <small style="opacity:.7;">40</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Latte (12oz)', 190)">☕ Latte <small style="opacity:.7;">190</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Green Tea', 2)">🍵 Green Tea <small style="opacity:.7;">2</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Herbal Tea', 2)">🌿 Herbal Tea <small style="opacity:.7;">2</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Zobo (unsweetened)', 30)">🌺 Zobo <small style="opacity:.7;">30</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Kunu (1 cup)', 120)">🥛 Kunu <small style="opacity:.7;">120</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chapman (1 glass)', 180)">🍹 Chapman <small style="opacity:.7;">180</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Palm Wine (1 cup)', 100)">🍶 Palm Wine <small style="opacity:.7;">100</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Fresh Coconut Water', 45)">🥥 Coconut Water <small style="opacity:.7;">45</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Orange Juice (8oz)', 110)">🍊 OJ <small style="opacity:.7;">110</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Protein Shake', 160)">🥤 Protein Shake <small style="opacity:.7;">160</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Smoothie (12oz)', 220)">🥤 Smoothie <small style="opacity:.7;">220</small></button>
       </div>
     </div>
 
@@ -3438,6 +3512,25 @@ function startWorkoutTimer(minutes) {
 }
 
 // ===== CALORIE COUNTER / FOOD TRACKER =====
+function switchFoodCategory(cat) {
+  document.querySelectorAll('.food-cat-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('food-cat-' + cat);
+  if (panel) panel.style.display = 'flex';
+  document.querySelectorAll('.food-cat-btn').forEach(b => {
+    if (b.dataset.cat === cat) {
+      b.style.background = '#fff';
+      b.style.color = '';
+      b.style.boxShadow = '0 1px 3px rgba(0,0,0,.08)';
+      b.classList.add('active');
+    } else {
+      b.style.background = 'transparent';
+      b.style.color = 'var(--gray)';
+      b.style.boxShadow = 'none';
+      b.classList.remove('active');
+    }
+  });
+}
+
 function saveCalorieGoal() {
   const val = parseInt(document.getElementById('calorie-goal-input').value);
   if (val && val >= 800 && val <= 5000) {
