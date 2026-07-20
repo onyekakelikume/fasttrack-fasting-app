@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.67</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.68</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1492,6 +1492,58 @@ FEATURES:
         <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
       </div>
       <div id="backup-status" style="font-size:12px;color:var(--gray);text-align:center;display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTION SIZE MODAL -->
+<div class="modal-overlay" id="portion-modal">
+  <div class="modal-box">
+    <h3 id="portion-modal-title" style="margin-bottom:4px;">🍽️ Portion Size</h3>
+    <p id="portion-modal-food" style="font-size:14px;color:var(--gray);margin-bottom:16px;font-weight:600;"></p>
+
+    <!-- Quick portion presets -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="portion-preset" data-mult="0.25" onclick="setPortion(0.25)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--light-gray);background:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">¼</button>
+      <button class="portion-preset" data-mult="0.5" onclick="setPortion(0.5)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--light-gray);background:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">½</button>
+      <button class="portion-preset" data-mult="0.75" onclick="setPortion(0.75)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--light-gray);background:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">¾</button>
+      <button class="portion-preset" data-mult="1" onclick="setPortion(1)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--coral);background:linear-gradient(135deg,var(--coral),var(--purple));color:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">1x</button>
+      <button class="portion-preset" data-mult="1.5" onclick="setPortion(1.5)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--light-gray);background:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">1½x</button>
+      <button class="portion-preset" data-mult="2" onclick="setPortion(2)" style="flex:1;min-width:60px;padding:10px;border:2px solid var(--light-gray);background:#fff;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:13px;">2x</button>
+    </div>
+
+    <!-- Custom multiplier -->
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;color:var(--gray);font-weight:600;">Fine tune (0.1 - 5x)</label>
+      <input type="range" id="portion-slider" min="0.1" max="5" step="0.1" value="1" oninput="onPortionSlider(this.value)" style="width:100%;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);">
+        <span>0.1x</span><span>5x</span>
+      </div>
+    </div>
+
+    <!-- Calorie preview -->
+    <div style="padding:16px;background:linear-gradient(135deg, rgba(255,107,107,0.08), rgba(139,92,246,0.08));border-radius:12px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--gray);font-weight:600;">Estimated calories</div>
+      <div id="portion-cal-display" style="font-size:32px;font-weight:800;color:var(--coral);margin-top:4px;">0 cal</div>
+      <div id="portion-mult-display" style="font-size:12px;color:var(--gray);font-weight:600;">1x standard portion</div>
+    </div>
+
+    <!-- Meal type -->
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;color:var(--gray);font-weight:600;">Meal</label>
+      <select id="portion-meal" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;outline:none;background:#fff;margin-top:4px;">
+        <option value="breakfast">🌅 Breakfast</option>
+        <option value="lunch">🌞 Lunch</option>
+        <option value="dinner">🌙 Dinner</option>
+        <option value="snack">🍿 Snack</option>
+      </select>
+    </div>
+
+    <p style="font-size:11px;color:var(--gray);margin-bottom:12px;line-height:1.5;">💡 Portions are estimates. "1x" is a standard cup/serving — adjust based on your actual plate size.</p>
+
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="hidePortionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPortion()">✅ Log Food</button>
     </div>
   </div>
 </div>
@@ -3546,21 +3598,95 @@ function saveCalorieGoal() {
   }
 }
 
+// Pending food state for portion modal
+let pendingFood = { name: '', baseCalories: 0, multiplier: 1 };
+
 function quickAddFood(name, calories) {
-  const today = new Date().toDateString();
-  let foodLog = {};
-  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
-  if (!foodLog[today]) foodLog[today] = [];
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  // Opens portion modal (replaces old auto-log behavior)
+  pendingFood = { name, baseCalories: calories, multiplier: 1 };
+  document.getElementById('portion-modal-food').textContent = name + ' • ' + calories + ' cal (1x)';
   // Auto-detect meal type by time of day
-  const h = now.getHours();
+  const h = new Date().getHours();
   let meal = 'snack';
   if (h < 11) meal = 'breakfast';
   else if (h < 15) meal = 'lunch';
   else if (h < 21) meal = 'dinner';
-  foodLog[today].push({ name, calories, meal, time: timeStr });
+  document.getElementById('portion-meal').value = meal;
+  // Reset to 1x
+  setPortion(1);
+  document.getElementById('portion-slider').value = 1;
+  document.getElementById('portion-modal').classList.add('show');
+}
+
+function setPortion(mult) {
+  pendingFood.multiplier = mult;
+  document.getElementById('portion-slider').value = mult;
+  updatePortionDisplay();
+  // Highlight matching preset
+  document.querySelectorAll('.portion-preset').forEach(btn => {
+    if (parseFloat(btn.dataset.mult) === mult) {
+      btn.style.background = 'linear-gradient(135deg,var(--coral),var(--purple))';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--coral)';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = '';
+      btn.style.borderColor = 'var(--light-gray)';
+    }
+  });
+}
+
+function onPortionSlider(val) {
+  pendingFood.multiplier = parseFloat(val);
+  updatePortionDisplay();
+  // Clear preset highlights if slider is used off-preset
+  document.querySelectorAll('.portion-preset').forEach(btn => {
+    if (parseFloat(btn.dataset.mult) === parseFloat(val)) {
+      btn.style.background = 'linear-gradient(135deg,var(--coral),var(--purple))';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--coral)';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = '';
+      btn.style.borderColor = 'var(--light-gray)';
+    }
+  });
+}
+
+function updatePortionDisplay() {
+  const cal = Math.round(pendingFood.baseCalories * pendingFood.multiplier);
+  document.getElementById('portion-cal-display').textContent = cal + ' cal';
+  const m = pendingFood.multiplier;
+  let label = m + 'x standard portion';
+  if (m === 0.25) label = '¼ portion (small taste)';
+  else if (m === 0.5) label = '½ portion (light)';
+  else if (m === 0.75) label = '¾ portion';
+  else if (m === 1) label = '1x standard portion';
+  else if (m === 1.5) label = '1½x portion (hearty)';
+  else if (m === 2) label = '2x portion (large)';
+  else if (m < 1) label = m + 'x (smaller)';
+  else label = m + 'x (larger)';
+  document.getElementById('portion-mult-display').textContent = label;
+}
+
+function hidePortionModal() {
+  document.getElementById('portion-modal').classList.remove('show');
+}
+
+function confirmPortion() {
+  const cal = Math.round(pendingFood.baseCalories * pendingFood.multiplier);
+  const meal = document.getElementById('portion-meal').value;
+  const mult = pendingFood.multiplier;
+  const displayName = mult === 1 ? pendingFood.name : pendingFood.name + ' (' + mult + 'x)';
+
+  const today = new Date().toDateString();
+  let foodLog = {};
+  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
+  if (!foodLog[today]) foodLog[today] = [];
+  const timeStr = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  foodLog[today].push({ name: displayName, calories: cal, meal, time: timeStr });
   localStorage.setItem('fasttrack_food_log', JSON.stringify(foodLog));
+  hidePortionModal();
   loadFoodData();
 }
 
