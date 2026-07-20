@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.64</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.65</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1165,6 +1165,99 @@ FEATURES:
 
   </div>
 
+  <!-- SCREEN: Food / Calorie Counter -->
+  <div id="screen-food" class="screen">
+
+    <!-- Daily Calorie Goal -->
+    <div class="card">
+      <div class="card-title">🎯 Daily Calorie Goal</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Goal (calories/day)</label>
+          <input type="number" id="calorie-goal-input" value="1500" min="800" max="5000" step="50" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;text-align:center;">
+        </div>
+        <button class="btn btn-primary" onclick="saveCalorieGoal()" style="padding:10px 16px;">💾 Set</button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:12px;position:relative;">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="75" fill="none" stroke="#F1F5F9" stroke-width="14"/>
+          <circle id="calorie-goal-ring" cx="90" cy="90" r="75" fill="none" stroke="var(--coral)" stroke-width="14" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" transform="rotate(-90 90 90)"/>
+        </svg>
+        <div style="position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;width:180px;height:180px;">
+          <div id="calorie-consumed" style="font-size:32px;font-weight:800;color:var(--coral);">0</div>
+          <div style="font-size:12px;color:var(--gray);font-weight:600;">of <span id="calorie-goal-display">1500</span> cal</div>
+          <div id="calorie-remaining" style="font-size:13px;color:var(--green);font-weight:700;margin-top:4px;">1500 left</div>
+        </div>
+      </div>
+      <!-- Net calorie summary (food - burned) -->
+      <div style="display:flex;justify-content:space-around;padding:12px;background:linear-gradient(135deg, rgba(255,107,107,0.08), rgba(139,92,246,0.08));border-radius:12px;text-align:center;">
+        <div><div style="font-size:18px;font-weight:800;color:var(--coral);" id="food-in">0</div><div style="font-size:10px;color:var(--gray);font-weight:600;">🍽️ IN</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--green);" id="food-burned">0</div><div style="font-size:10px;color:var(--gray);font-weight:600;">🔥 BURNED</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--purple);" id="food-net">0</div><div style="font-size:10px;color:var(--gray);font-weight:600;">⚖️ NET</div></div>
+      </div>
+    </div>
+
+    <!-- Quick Add Common Foods -->
+    <div class="card">
+      <div class="card-title">⚡ Quick Add</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="quick-food-list">
+        <button class="activity-type-btn" onclick="quickAddFood('Egg', 78)">🥚 Egg <small style="opacity:.7;">78</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Banana', 105)">🍌 Banana <small style="opacity:.7;">105</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Apple', 95)">🍎 Apple <small style="opacity:.7;">95</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Avocado', 240)">🥑 Avocado <small style="opacity:.7;">240</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Greek Yogurt', 130)">🥛 Yogurt <small style="opacity:.7;">130</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Oatmeal (1 cup)', 158)">🥣 Oatmeal <small style="opacity:.7;">158</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chicken Breast (4oz)', 187)">🍗 Chicken <small style="opacity:.7;">187</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Salmon (4oz)', 233)">🐟 Salmon <small style="opacity:.7;">233</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Rice (1 cup)', 206)">🍚 Rice <small style="opacity:.7;">206</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Sweet Potato', 112)">🍠 S.Potato <small style="opacity:.7;">112</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Salad Bowl', 200)">🥗 Salad <small style="opacity:.7;">200</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Almonds (1oz)', 164)">🌰 Almonds <small style="opacity:.7;">164</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Coffee w/ Milk', 40)">☕ Coffee <small style="opacity:.7;">40</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Protein Shake', 160)">🥤 Shake <small style="opacity:.7;">160</small></button>
+      </div>
+    </div>
+
+    <!-- Custom Food Entry -->
+    <div class="card">
+      <div class="card-title">📝 Log Custom Food</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:2;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Food name</label>
+          <input type="text" id="food-name-input" placeholder="e.g. Turkey sandwich" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;outline:none;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--gray);font-weight:600;">Calories</label>
+          <input type="number" id="food-cal-input" placeholder="350" min="1" max="5000" style="width:100%;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:16px;font-weight:600;font-family:inherit;outline:none;text-align:center;">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <select id="food-meal-input" style="flex:1;padding:10px;border:2px solid var(--light-gray);border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;outline:none;background:#fff;">
+          <option value="breakfast">🌅 Breakfast</option>
+          <option value="lunch" selected>🌞 Lunch</option>
+          <option value="dinner">🌙 Dinner</option>
+          <option value="snack">🍿 Snack</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="logFood()" style="width:100%;padding:14px;font-size:16px;">✅ Log Food</button>
+    </div>
+
+    <!-- Today's Food Log -->
+    <div class="card">
+      <div class="card-title">📋 Today's Meals</div>
+      <div id="food-log-today" style="font-size:14px;color:var(--gray);text-align:center;padding:16px;">No food logged today</div>
+    </div>
+
+    <!-- Weight Loss Insights -->
+    <div class="card">
+      <div class="card-title">💡 Weight Loss Insight</div>
+      <div id="food-insight" style="padding:12px;background:linear-gradient(135deg, rgba(72,199,116,0.1), rgba(59,130,246,0.1));border-radius:12px;font-size:13px;line-height:1.6;">
+        Log your food to see personalized insights on your progress toward your weight goal.
+      </div>
+    </div>
+
+  </div>
+
   <!-- SCREEN 4: Weight Tracker -->
   <div id="screen-weight" class="screen">
     <div class="card">
@@ -1424,6 +1517,10 @@ FEATURES:
   <button class="nav-tab" id="nav-activity" onclick="switchTab('activity')">
     <span class="nav-icon">💪</span>
     <span class="nav-label">Activity</span>
+  </button>
+  <button class="nav-tab" id="nav-food" onclick="switchTab('food')">
+    <span class="nav-icon">🍽️</span>
+    <span class="nav-label">Food</span>
   </button>
   <button class="nav-tab" id="nav-weight" onclick="switchTab('weight')">
     <span class="nav-icon">📉</span>
@@ -2125,6 +2222,9 @@ function switchTab(tab) {
   } else if (tab === 'activity') {
     showScreen('screen-activity');
     loadActivityData();
+  } else if (tab === 'food') {
+    showScreen('screen-food');
+    loadFoodData();
   } else if (tab === 'weight') {
     showScreen('screen-weight');
     loadWeightData();
@@ -3274,6 +3374,200 @@ function startWorkoutTimer(minutes) {
   }, 1000);
 }
 
+// ===== CALORIE COUNTER / FOOD TRACKER =====
+function saveCalorieGoal() {
+  const val = parseInt(document.getElementById('calorie-goal-input').value);
+  if (val && val >= 800 && val <= 5000) {
+    localStorage.setItem('fasttrack_calorie_goal', val);
+    loadFoodData();
+    // Toast-like feedback
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✅ Saved';
+    setTimeout(() => btn.textContent = orig, 1200);
+  } else {
+    alert('Please enter a calorie goal between 800 and 5000');
+  }
+}
+
+function quickAddFood(name, calories) {
+  const today = new Date().toDateString();
+  let foodLog = {};
+  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
+  if (!foodLog[today]) foodLog[today] = [];
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  // Auto-detect meal type by time of day
+  const h = now.getHours();
+  let meal = 'snack';
+  if (h < 11) meal = 'breakfast';
+  else if (h < 15) meal = 'lunch';
+  else if (h < 21) meal = 'dinner';
+  foodLog[today].push({ name, calories, meal, time: timeStr });
+  localStorage.setItem('fasttrack_food_log', JSON.stringify(foodLog));
+  loadFoodData();
+}
+
+function logFood() {
+  const name = document.getElementById('food-name-input').value.trim();
+  const cal = parseInt(document.getElementById('food-cal-input').value);
+  const meal = document.getElementById('food-meal-input').value;
+  if (!name) { alert('Please enter a food name'); return; }
+  if (!cal || cal < 1) { alert('Please enter calories'); return; }
+  const today = new Date().toDateString();
+  let foodLog = {};
+  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
+  if (!foodLog[today]) foodLog[today] = [];
+  const timeStr = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  foodLog[today].push({ name, calories: cal, meal, time: timeStr });
+  localStorage.setItem('fasttrack_food_log', JSON.stringify(foodLog));
+  document.getElementById('food-name-input').value = '';
+  document.getElementById('food-cal-input').value = '';
+  loadFoodData();
+}
+
+function deleteFood(index) {
+  const today = new Date().toDateString();
+  let foodLog = {};
+  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
+  if (foodLog[today]) {
+    foodLog[today].splice(index, 1);
+    localStorage.setItem('fasttrack_food_log', JSON.stringify(foodLog));
+    loadFoodData();
+  }
+}
+
+function loadFoodData() {
+  const today = new Date().toDateString();
+  const goal = parseInt(localStorage.getItem('fasttrack_calorie_goal')) || 1500;
+  document.getElementById('calorie-goal-input').value = goal;
+  document.getElementById('calorie-goal-display').textContent = goal;
+
+  let foodLog = {};
+  try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
+  const todayFood = foodLog[today] || [];
+
+  let totalCal = 0;
+  todayFood.forEach(f => totalCal += f.calories);
+
+  // Calories burned today (from activities)
+  let activities = {};
+  try { activities = JSON.parse(localStorage.getItem('fasttrack_activities')) || {}; } catch(e) {}
+  const todayActs = activities[today] || [];
+  let totalBurned = 0;
+  todayActs.forEach(a => totalBurned += a.calories);
+
+  const net = totalCal - totalBurned;
+
+  // Update ring
+  const pct = Math.min(100, Math.round((totalCal / goal) * 100));
+  const circumference = 2 * Math.PI * 75; // ~471
+  const offset = circumference * (1 - pct / 100);
+  document.getElementById('calorie-goal-ring').setAttribute('stroke-dashoffset', offset);
+  document.getElementById('calorie-consumed').textContent = totalCal;
+
+  const remaining = goal - totalCal;
+  const remEl = document.getElementById('calorie-remaining');
+  if (remaining >= 0) {
+    remEl.textContent = remaining + ' left';
+    remEl.style.color = 'var(--green)';
+  } else {
+    remEl.textContent = Math.abs(remaining) + ' over';
+    remEl.style.color = 'var(--coral)';
+  }
+
+  // Color ring based on progress
+  let ringColor = 'var(--green)';
+  if (totalCal > goal) ringColor = 'var(--coral)';
+  else if (totalCal > goal * 0.85) ringColor = 'var(--yellow)';
+  document.getElementById('calorie-goal-ring').setAttribute('stroke', ringColor);
+  document.getElementById('calorie-consumed').style.color = ringColor;
+
+  // Net summary
+  document.getElementById('food-in').textContent = totalCal;
+  document.getElementById('food-burned').textContent = totalBurned;
+  document.getElementById('food-net').textContent = net;
+
+  // Today's food log — grouped by meal
+  const logEl = document.getElementById('food-log-today');
+  if (todayFood.length === 0) {
+    logEl.innerHTML = '<div style="color:var(--gray);text-align:center;padding:16px;">No food logged today</div>';
+  } else {
+    const mealEmojis = { breakfast: '🌅', lunch: '🌞', dinner: '🌙', snack: '🍿' };
+    const mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+    const grouped = {};
+    todayFood.forEach((f, i) => {
+      if (!grouped[f.meal]) grouped[f.meal] = [];
+      grouped[f.meal].push({ ...f, index: i });
+    });
+    let html = '';
+    mealOrder.forEach(meal => {
+      if (!grouped[meal]) return;
+      const mealCals = grouped[meal].reduce((s, f) => s + f.calories, 0);
+      html += '<div style="margin-bottom:12px;">';
+      html += '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--light-gray);">';
+      html += '<span>' + mealEmojis[meal] + ' ' + meal + '</span><span>' + mealCals + ' cal</span>';
+      html += '</div>';
+      grouped[meal].forEach(f => {
+        html += '<div class="activity-log-item">';
+        html += '<span>' + f.name + ' <span style="font-size:11px;color:var(--gray);">• ' + f.time + '</span></span>';
+        html += '<span><strong>' + f.calories + ' cal</strong> <span onclick="deleteFood(' + f.index + ')" style="cursor:pointer;margin-left:4px;">🗑️</span></span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    logEl.innerHTML = html;
+  }
+
+  // Insight
+  updateFoodInsight(totalCal, totalBurned, goal);
+}
+
+function updateFoodInsight(consumed, burned, goal) {
+  const el = document.getElementById('food-insight');
+  const net = consumed - burned;
+
+  // Get latest weight & goal for personalized deficit math
+  let weightEntries = [];
+  try { weightEntries = JSON.parse(localStorage.getItem('fasttrack_weights')) || []; } catch(e) {}
+  const currentWeight = weightEntries.length > 0 ? weightEntries[weightEntries.length - 1].weight : null;
+  const targetWeight = parseFloat(localStorage.getItem('fasttrack_goal')) || null;
+
+  let msg = '';
+  if (consumed === 0) {
+    msg = '📝 Log your first meal to see personalized insights.';
+  } else if (currentWeight && targetWeight && currentWeight > targetWeight) {
+    // Assume maintenance ~ weight * 13 (light activity, in lbs). Rough estimate.
+    const maintenance = Math.round(currentWeight * 13);
+    const deficit = maintenance - net;
+    const lbsPerWeek = (deficit * 7 / 3500).toFixed(1);
+    if (deficit > 0) {
+      msg = '🔥 <strong>Deficit today: ~' + deficit + ' cal</strong><br>';
+      msg += 'At this pace, you\'d lose ~<strong>' + lbsPerWeek + ' lbs/week</strong>. ';
+      msg += 'Goal: ' + currentWeight + ' → ' + targetWeight + ' lbs.';
+      if (parseFloat(lbsPerWeek) > 2) {
+        msg += '<br><br>⚠️ That\'s aggressive — aim for 1-1.5 lbs/week for sustainable loss.';
+      } else if (parseFloat(lbsPerWeek) >= 1) {
+        msg += '<br><br>✅ Right in the healthy loss zone. Keep going!';
+      }
+    } else {
+      msg = '⚖️ <strong>Surplus today: ~' + Math.abs(deficit) + ' cal</strong><br>';
+      msg += 'You\'re over your estimated maintenance (' + maintenance + ' cal). ';
+      msg += 'Consider a walk, or lighter dinner to stay on track toward ' + targetWeight + ' lbs.';
+    }
+  } else if (consumed > goal) {
+    msg = '⚠️ You\'re <strong>' + (consumed - goal) + ' cal over</strong> your daily goal. Try a walk to offset it.';
+  } else {
+    const pct = Math.round((consumed / goal) * 100);
+    msg = '✅ You\'re at <strong>' + pct + '%</strong> of your calorie goal. ';
+    msg += '<strong>' + (goal - consumed) + ' cal</strong> remaining today.';
+    if (burned > 0) {
+      msg += '<br><br>🔥 You\'ve burned <strong>' + burned + ' cal</strong> through activity — nice work!';
+    }
+  }
+  el.innerHTML = msg;
+}
+
 // ===== IN-APP REMINDERS & NOTIFICATIONS =====
 let notifQueue = [];
 let notifShowing = false;
@@ -3742,6 +4036,7 @@ async function initApp() {
   loadBMIData();
   renderWater();
   loadAvatar();
+  loadFoodData();
 
   // Restore saved plan selection
   const savedPlan = localStorage.getItem('fasttrack_plan');
