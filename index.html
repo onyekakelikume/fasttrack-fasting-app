@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.65</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.66</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -938,6 +938,14 @@ FEATURES:
         <div style="font-weight:700;font-size:14px;margin-bottom:6px;">💡 Post-Fast Tip</div>
         <div style="font-size:13px;color:#475569;line-height:1.6;" id="post-fast-tip">Start with warm water or bone broth, then ease into a light meal after 15-30 minutes.</div>
       </div>
+
+      <!-- Break-Fast Meal Suggestions -->
+      <div class="card" style="background:linear-gradient(135deg, rgba(255,107,107,0.08), rgba(139,92,246,0.08));text-align:left;margin-top:12px;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:10px;">🍽️ Break Your Fast Right</div>
+        <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Protein-forward meals to stabilize blood sugar and keep you full. Tap to log:</div>
+        <div id="break-fast-suggestions"></div>
+      </div>
+
       <p style="font-size:12px;color:var(--gray);margin-top:16px;">🍽️ Eating window starting automatically...</p>
     </div>
   </div>
@@ -1216,6 +1224,13 @@ FEATURES:
         <button class="activity-type-btn" onclick="quickAddFood('Coffee w/ Milk', 40)">☕ Coffee <small style="opacity:.7;">40</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Protein Shake', 160)">🥤 Shake <small style="opacity:.7;">160</small></button>
       </div>
+    </div>
+
+    <!-- Break-Fast Meal Suggestions -->
+    <div class="card">
+      <div class="card-title">🌟 Break Your Fast Right</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Protein-forward meals designed to stabilize blood sugar and keep you full for hours.</div>
+      <div id="break-fast-food-tab"></div>
     </div>
 
     <!-- Custom Food Entry -->
@@ -2086,8 +2101,56 @@ function showCelebration(elapsedMs) {
   ];
   document.getElementById('post-fast-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
 
+  renderBreakFastSuggestions('break-fast-suggestions', hrs);
+
   showScreen('screen-celebration');
   launchConfetti();
+}
+
+// ===== BREAK-FAST MEAL SUGGESTIONS =====
+const BREAK_FAST_MEALS = [
+  { emoji: '🥑', name: 'Avocado + Eggs + Spinach', cal: 420, protein: 22, tag: 'Classic', why: 'Fat + protein = 4hr fullness. Zero blood sugar spike.' },
+  { emoji: '🥣', name: 'Greek Yogurt + Berries + Almonds', cal: 340, protein: 24, tag: 'Fast', why: 'Probiotics reintroduce gut bacteria gently. Ready in 30 sec.' },
+  { emoji: '🥗', name: 'Chicken + Avocado + Quinoa Bowl', cal: 550, protein: 42, tag: 'Power', why: 'Complete meal — hits protein target + slow carbs.' },
+  { emoji: '🍳', name: '3-Egg Veggie Omelet + Avocado', cal: 450, protein: 26, tag: 'Classic', why: 'Whole eggs are the gold standard first meal.' },
+  { emoji: '🐟', name: 'Salmon + Sweet Potato + Broccoli', cal: 580, protein: 38, tag: 'Power', why: 'Omega-3s fight inflammation from the fast.' },
+  { emoji: '🥤', name: 'Protein Shake + Banana + Peanut Butter', cal: 380, protein: 32, tag: 'Fast', why: 'Emergency option when you don\'t want to cook.' },
+  { emoji: '🌯', name: 'Whole-Wheat Wrap: Chicken + Avocado + Spinach', cal: 480, protein: 35, tag: 'Portable', why: 'Grab-and-go. Like a First Watch Power Wrap.' },
+  { emoji: '🥘', name: 'Cottage Cheese + Berries + Walnuts', cal: 310, protein: 26, tag: 'Fast', why: 'Casein protein digests slowly. Great satiety.' },
+  { emoji: '🍲', name: 'Bone Broth + Soft-Boiled Eggs', cal: 220, protein: 18, tag: 'Gentle', why: 'Best after 20h+ fasts — very easy on digestion.' },
+  { emoji: '🥩', name: 'Steak + Roasted Veggies + Olive Oil', cal: 620, protein: 45, tag: 'Power', why: 'Highest protein hit for muscle preservation.' }
+];
+
+function renderBreakFastSuggestions(containerId, fastHours) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  // Pick suggestions based on fast length
+  let pool = BREAK_FAST_MEALS;
+  if (fastHours >= 20) {
+    // Long fast — prioritize gentle options
+    pool = BREAK_FAST_MEALS.filter(m => ['Gentle', 'Fast'].includes(m.tag) || m.cal < 400);
+  } else if (fastHours >= 16) {
+    pool = BREAK_FAST_MEALS.filter(m => m.tag !== 'Gentle');
+  }
+  // Shuffle and pick 4
+  const picks = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+  let html = '';
+  picks.forEach(m => {
+    const escName = m.name.replace(/'/g, "\\'");
+    html += '<div style="padding:12px;background:#fff;border-radius:12px;margin-bottom:8px;border:2px solid var(--light-gray);cursor:pointer;" onclick="quickAddFood(\'' + escName + '\', ' + m.cal + ')">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+    html += '<div style="font-weight:700;font-size:14px;">' + m.emoji + ' ' + m.name + '</div>';
+    html += '<div style="font-size:11px;background:var(--light-gray);padding:3px 8px;border-radius:8px;font-weight:600;color:var(--purple);">' + m.tag + '</div>';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:var(--gray);margin-bottom:6px;">' + m.why + '</div>';
+    html += '<div style="display:flex;gap:12px;font-size:12px;font-weight:700;">';
+    html += '<span style="color:var(--coral);">🔥 ' + m.cal + ' cal</span>';
+    html += '<span style="color:var(--green);">💪 ' + m.protein + 'g protein</span>';
+    html += '<span style="color:var(--blue);margin-left:auto;font-size:11px;">Tap to log →</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
 }
 
 function launchConfetti() {
@@ -3521,6 +3584,9 @@ function loadFoodData() {
 
   // Insight
   updateFoodInsight(totalCal, totalBurned, goal);
+
+  // Render break-fast suggestions in Food tab (default to 16h context)
+  renderBreakFastSuggestions('break-fast-food-tab', 16);
 }
 
 function updateFoodInsight(consumed, burned, goal) {
