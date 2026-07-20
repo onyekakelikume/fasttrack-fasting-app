@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.68</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.69</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1300,6 +1300,13 @@ FEATURES:
       </div>
     </div>
 
+    <!-- Meal Combos -->
+    <div class="card">
+      <div class="card-title">🍽️ Meal Combos</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">Common Nigerian pairings — tap to log both items with one portion picker.</div>
+      <div id="meal-combos-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+
     <!-- Break-Fast Meal Suggestions -->
     <div class="card">
       <div class="card-title">🌟 Break Your Fast Right</div>
@@ -1500,7 +1507,18 @@ FEATURES:
 <div class="modal-overlay" id="portion-modal">
   <div class="modal-box">
     <h3 id="portion-modal-title" style="margin-bottom:4px;">🍽️ Portion Size</h3>
-    <p id="portion-modal-food" style="font-size:14px;color:var(--gray);margin-bottom:16px;font-weight:600;"></p>
+    <p id="portion-modal-food" style="font-size:14px;color:var(--gray);margin-bottom:8px;font-weight:600;"></p>
+
+    <!-- Visual portion guide -->
+    <div id="portion-visual-guide" style="padding:10px 12px;background:linear-gradient(135deg, rgba(59,130,246,0.06), rgba(139,92,246,0.06));border-radius:10px;margin-bottom:14px;font-size:12px;line-height:1.5;color:#475569;">
+      <div style="font-weight:700;margin-bottom:4px;color:var(--blue);">📏 What "1x" looks like:</div>
+      <div id="portion-visual-desc">A standard cup / bowl (about the size of your fist)</div>
+    </div>
+
+    <!-- Last portion memory indicator -->
+    <div id="portion-memory-hint" style="display:none;padding:8px 12px;background:rgba(72,199,116,0.1);border-radius:10px;margin-bottom:12px;font-size:12px;font-weight:600;color:var(--green);">
+      🧠 <span id="portion-memory-text">Using your last portion (1.5x)</span>
+    </div>
 
     <!-- Quick portion presets -->
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
@@ -3599,12 +3617,98 @@ function saveCalorieGoal() {
 }
 
 // Pending food state for portion modal
-let pendingFood = { name: '', baseCalories: 0, multiplier: 1 };
+let pendingFood = { name: '', baseCalories: 0, multiplier: 1, combo: null };
 
-function quickAddFood(name, calories) {
+// Visual portion guide — describes what "1x" looks like for each food type
+function getPortionVisual(name) {
+  const n = name.toLowerCase();
+  // Swallows
+  if (n.includes('eba') || n.includes('garri') || n.includes('pounded yam') || n.includes('fufu') || n.includes('amala') || n.includes('semo')) {
+    return '🤜 A mound the size of your fist (~1 cup / 200g). Restaurant wraps are usually 1.5–2x this.';
+  }
+  // Rice dishes
+  if (n.includes('rice') || n.includes('jollof') || n.includes('ofada')) {
+    return '🍚 A leveled cup (~1 cup / 180g cooked). Restaurant plates are typically 1.5x.';
+  }
+  // Soups
+  if (n.includes('soup') || n.includes('egusi') || n.includes('ogbono') || n.includes('efo') || n.includes('okra') || n.includes('afang') || n.includes('banga') || n.includes('nsala')) {
+    return '🥣 A small bowl (~1 cup / 240ml). A hearty bowl with meat/fish is usually 1.5–2x.';
+  }
+  // Stews
+  if (n.includes('stew') || n.includes('sauce')) {
+    return '🥘 A ladle (~½ cup / 120ml). Adjust up if generous.';
+  }
+  // Meats
+  if (n.includes('suya') || n.includes('grilled fish') || n.includes('chicken breast') || n.includes('salmon') || n.includes('steak')) {
+    return '🖐️ Palm-sized portion (~4oz / 113g). Deck of cards = 3oz reference.';
+  }
+  // Nkwobi/Isi Ewu
+  if (n.includes('nkwobi') || n.includes('isi ewu')) {
+    return '🍲 One restaurant serving bowl (~200g). Small side portion = 0.5x.';
+  }
+  // Yam / Plantain
+  if (n.includes('boiled yam')) return '🍠 3–4 medium slices (~150g).';
+  if (n.includes('plantain')) return '🍌 1 cup fried / 1 whole boli (~150g).';
+  if (n.includes('boli')) return '🔥 One whole roasted plantain.';
+  // Beans/Moi Moi/Akara
+  if (n.includes('beans') || n.includes('ewa')) return '🫘 A leveled cup (~1 cup / 180g cooked).';
+  if (n.includes('moi moi')) return '🟠 One standard wrap or ramekin (~150g).';
+  if (n.includes('akara')) return '🟤 3 medium fritters (~90g total).';
+  // Wraps
+  if (n.includes('wrap') || n.includes('power wrap')) return '🌯 One full wrap. Half wrap = 0.5x.';
+  // Eggs
+  if (n.includes('egg')) return '🥚 One egg. Two eggs = 2x.';
+  // Drinks
+  if (n.includes('coffee') || n.includes('tea') || n.includes('brew')) return '☕ One standard mug (~8–12oz).';
+  if (n.includes('smoothie') || n.includes('shake') || n.includes('juice') || n.includes('kunu') || n.includes('zobo') || n.includes('chapman')) return '🥤 One 8–12oz glass.';
+  // Snacks
+  if (n.includes('meat pie')) return '🥟 One standard pie.';
+  if (n.includes('puff puff')) return '🟠 3 medium balls.';
+  if (n.includes('chin chin')) return '🍪 A small bowl (~½ cup / 40g).';
+  if (n.includes('pap') || n.includes('akamu') || n.includes('oatmeal')) return '🥣 A small bowl (~1 cup prepared).';
+  // Default
+  return '🍽️ A standard serving (about the size of your fist for solids, one cup for liquids).';
+}
+
+// Portion memory: recall last-used multiplier per food
+function getLastPortion(name) {
+  try {
+    const mem = JSON.parse(localStorage.getItem('fasttrack_portion_memory') || '{}');
+    return mem[name] || null;
+  } catch(e) { return null; }
+}
+
+function saveLastPortion(name, mult) {
+  try {
+    const mem = JSON.parse(localStorage.getItem('fasttrack_portion_memory') || '{}');
+    mem[name] = mult;
+    localStorage.setItem('fasttrack_portion_memory', JSON.stringify(mem));
+  } catch(e) {}
+}
+
+function quickAddFood(name, calories, options) {
+  options = options || {};
   // Opens portion modal (replaces old auto-log behavior)
-  pendingFood = { name, baseCalories: calories, multiplier: 1 };
-  document.getElementById('portion-modal-food').textContent = name + ' • ' + calories + ' cal (1x)';
+  pendingFood = { name, baseCalories: calories, multiplier: 1, combo: options.combo || null };
+
+  // Update header title for combos vs single foods
+  document.getElementById('portion-modal-title').textContent = options.combo ? '🍽️ Combo Portion' : '🍽️ Portion Size';
+  document.getElementById('portion-modal-food').textContent = name + ' • ' + calories + ' cal (1x base)';
+
+  // Visual guide
+  document.getElementById('portion-visual-desc').textContent = getPortionVisual(name);
+
+  // Check portion memory
+  const lastMult = getLastPortion(name);
+  const memHint = document.getElementById('portion-memory-hint');
+  const startMult = lastMult || 1;
+  if (lastMult && lastMult !== 1) {
+    document.getElementById('portion-memory-text').textContent = 'Using your last portion (' + lastMult + 'x). Tap another to change.';
+    memHint.style.display = 'block';
+  } else {
+    memHint.style.display = 'none';
+  }
+
   // Auto-detect meal type by time of day
   const h = new Date().getHours();
   let meal = 'snack';
@@ -3612,9 +3716,10 @@ function quickAddFood(name, calories) {
   else if (h < 15) meal = 'lunch';
   else if (h < 21) meal = 'dinner';
   document.getElementById('portion-meal').value = meal;
-  // Reset to 1x
-  setPortion(1);
-  document.getElementById('portion-slider').value = 1;
+
+  // Set initial portion (uses memory if available)
+  setPortion(startMult);
+  document.getElementById('portion-slider').value = startMult;
   document.getElementById('portion-modal').classList.add('show');
 }
 
@@ -3674,20 +3779,108 @@ function hidePortionModal() {
 }
 
 function confirmPortion() {
-  const cal = Math.round(pendingFood.baseCalories * pendingFood.multiplier);
   const meal = document.getElementById('portion-meal').value;
   const mult = pendingFood.multiplier;
-  const displayName = mult === 1 ? pendingFood.name : pendingFood.name + ' (' + mult + 'x)';
-
   const today = new Date().toDateString();
   let foodLog = {};
   try { foodLog = JSON.parse(localStorage.getItem('fasttrack_food_log')) || {}; } catch(e) {}
   if (!foodLog[today]) foodLog[today] = [];
   const timeStr = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-  foodLog[today].push({ name: displayName, calories: cal, meal, time: timeStr });
+
+  if (pendingFood.combo && Array.isArray(pendingFood.combo)) {
+    // Log each item in the combo, scaled by the combo multiplier
+    pendingFood.combo.forEach(item => {
+      const itemCal = Math.round(item.cal * mult);
+      const displayName = mult === 1 ? item.name : item.name + ' (' + mult + 'x)';
+      foodLog[today].push({ name: displayName, calories: itemCal, meal, time: timeStr });
+      // Save portion memory per individual item too
+      saveLastPortion(item.name, mult);
+    });
+    // Save combo memory under the combo name
+    saveLastPortion(pendingFood.name, mult);
+  } else {
+    // Single food
+    const cal = Math.round(pendingFood.baseCalories * mult);
+    const displayName = mult === 1 ? pendingFood.name : pendingFood.name + ' (' + mult + 'x)';
+    foodLog[today].push({ name: displayName, calories: cal, meal, time: timeStr });
+    saveLastPortion(pendingFood.name, mult);
+  }
+
   localStorage.setItem('fasttrack_food_log', JSON.stringify(foodLog));
   hidePortionModal();
   loadFoodData();
+}
+
+// ===== MEAL COMBOS =====
+const MEAL_COMBOS = [
+  { emoji: '🍚', name: 'Jollof + Chicken Stew', items: [
+    { name: 'Jollof Rice (1 cup)', cal: 330 },
+    { name: 'Chicken Stew (1 cup)', cal: 260 }
+  ]},
+  { emoji: '🥣', name: 'Egusi + Eba', items: [
+    { name: 'Egusi Soup (1 cup)', cal: 380 },
+    { name: 'Eba/Garri (1 cup)', cal: 360 }
+  ]},
+  { emoji: '🥬', name: 'Efo Riro + Amala', items: [
+    { name: 'Efo Riro (1 cup)', cal: 220 },
+    { name: 'Amala (1 cup)', cal: 220 }
+  ]},
+  { emoji: '🌾', name: 'Ofada Rice + Ayamase', items: [
+    { name: 'Ofada Rice (1 cup)', cal: 220 },
+    { name: 'Ayamase/Ofada Stew', cal: 380 }
+  ]},
+  { emoji: '🫘', name: 'Beans + Fried Plantain', items: [
+    { name: 'Beans/Ewa (1 cup)', cal: 240 },
+    { name: 'Plantain (fried, 1 cup)', cal: 320 }
+  ]},
+  { emoji: '🥔', name: 'Pounded Yam + Egusi', items: [
+    { name: 'Pounded Yam (1 cup)', cal: 340 },
+    { name: 'Egusi Soup (1 cup)', cal: 380 }
+  ]},
+  { emoji: '🍲', name: 'Pepper Soup + Yam', items: [
+    { name: 'Pepper Soup (Catfish)', cal: 280 },
+    { name: 'Boiled Yam (1 cup)', cal: 158 }
+  ]},
+  { emoji: '🌿', name: 'Fufu + Bitter Leaf', items: [
+    { name: 'Fufu (1 cup)', cal: 320 },
+    { name: 'Bitter Leaf Soup (1 cup)', cal: 250 }
+  ]},
+  { emoji: '⚫', name: 'Ogbono + Semo', items: [
+    { name: 'Ogbono Soup (1 cup)', cal: 340 },
+    { name: 'Semo (1 cup)', cal: 300 }
+  ]},
+  { emoji: '🥣', name: 'Pap + Akara', items: [
+    { name: 'Pap/Akamu (1 cup)', cal: 140 },
+    { name: 'Akara (3 pcs)', cal: 240 }
+  ]},
+  { emoji: '🍳', name: 'Bread + Egg Sauce', items: [
+    { name: 'Bread (2 slices)', cal: 160 },
+    { name: 'Egg Sauce', cal: 220 }
+  ]},
+  { emoji: '🍛', name: 'Coconut Rice + Grilled Fish', items: [
+    { name: 'Coconut Rice (1 cup)', cal: 350 },
+    { name: 'Grilled Fish (Tilapia)', cal: 220 }
+  ]}
+];
+
+function renderMealCombos() {
+  const el = document.getElementById('meal-combos-list');
+  if (!el) return;
+  let html = '';
+  MEAL_COMBOS.forEach((combo, i) => {
+    const totalCal = combo.items.reduce((s, it) => s + it.cal, 0);
+    html += '<button class="activity-type-btn" style="text-align:left;flex-direction:column;align-items:flex-start;padding:10px 12px;" onclick="quickAddCombo(' + i + ')">';
+    html += '<div style="font-weight:700;font-size:13px;">' + combo.emoji + ' ' + combo.name + '</div>';
+    html += '<div style="font-size:11px;opacity:.7;font-weight:600;margin-top:2px;">' + totalCal + ' cal (1x)</div>';
+    html += '</button>';
+  });
+  el.innerHTML = html;
+}
+
+function quickAddCombo(index) {
+  const combo = MEAL_COMBOS[index];
+  const totalCal = combo.items.reduce((s, it) => s + it.cal, 0);
+  quickAddFood(combo.name, totalCal, { combo: combo.items });
 }
 
 function logFood() {
@@ -3804,8 +3997,11 @@ function loadFoodData() {
   // Insight
   updateFoodInsight(totalCal, totalBurned, goal);
 
-  // Render break-fast suggestions in Food tab (default to 16h context)
-  renderBreakFastSuggestions('break-fast-food-tab', 16);
+  // Render break-fast suggestions in Food tab (default to 18h — user's IF protocol)
+  renderBreakFastSuggestions('break-fast-food-tab', 18);
+
+  // Render meal combos
+  renderMealCombos();
 }
 
 function updateFoodInsight(consumed, burned, goal) {
