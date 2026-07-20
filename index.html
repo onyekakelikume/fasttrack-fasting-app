@@ -711,7 +711,7 @@ FEATURES:
     <input type="file" id="avatar-upload-header" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
     <h1>⚡ FastTrack</h1>
     <p id="header-greeting">Your cheerful fasting companion</p>
-    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.69</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:2px;">Built by Keltech Inc. • v1.70</p>
     <button onclick="toggleDarkMode()" style="position:absolute;top:20px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;" id="dark-toggle">🌙</button>
   </header>
 
@@ -1208,10 +1208,12 @@ FEATURES:
     <!-- Quick Add Foods (with category tabs) -->
     <div class="card">
       <div class="card-title">⚡ Quick Add</div>
-      <div style="display:flex;gap:6px;margin-bottom:12px;background:var(--light-gray);padding:4px;border-radius:10px;">
-        <button class="food-cat-btn active" data-cat="common" onclick="switchFoodCategory('common')" style="flex:1;padding:8px;border:none;background:#fff;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);">🌎 Common</button>
-        <button class="food-cat-btn" data-cat="nigerian" onclick="switchFoodCategory('nigerian')" style="flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;color:var(--gray);">🇳🇬 Nigerian</button>
-        <button class="food-cat-btn" data-cat="drinks" onclick="switchFoodCategory('drinks')" style="flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;color:var(--gray);">🥤 Drinks</button>
+      <div style="display:flex;gap:6px;margin-bottom:12px;background:var(--light-gray);padding:4px;border-radius:10px;overflow-x:auto;">
+        <button class="food-cat-btn active" data-cat="common" onclick="switchFoodCategory('common')" style="flex:1;min-width:80px;padding:8px 6px;border:none;background:#fff;border-radius:8px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);white-space:nowrap;">🌎 Common</button>
+        <button class="food-cat-btn" data-cat="nigerian" onclick="switchFoodCategory('nigerian')" style="flex:1;min-width:80px;padding:8px 6px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray);white-space:nowrap;">🇳🇬 Nigerian</button>
+        <button class="food-cat-btn" data-cat="fruits" onclick="switchFoodCategory('fruits')" style="flex:1;min-width:70px;padding:8px 6px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray);white-space:nowrap;">🍎 Fruits</button>
+        <button class="food-cat-btn" data-cat="snacks" onclick="switchFoodCategory('snacks')" style="flex:1;min-width:70px;padding:8px 6px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray);white-space:nowrap;">🥜 Snacks</button>
+        <button class="food-cat-btn" data-cat="drinks" onclick="switchFoodCategory('drinks')" style="flex:1;min-width:70px;padding:8px 6px;border:none;background:transparent;border-radius:8px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray);white-space:nowrap;">🥤 Drinks</button>
       </div>
 
       <!-- Common foods -->
@@ -1279,6 +1281,89 @@ FEATURES:
         <button class="activity-type-btn" onclick="quickAddFood('Pap/Akamu (1 cup)', 140)">🥣 Pap/Akamu <small style="opacity:.7;">140</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Boiled Egg', 78)">🥚 Boiled Egg <small style="opacity:.7;">78</small></button>
         <button class="activity-type-btn" onclick="quickAddFood('Egg Sauce', 220)">🍳 Egg Sauce <small style="opacity:.7;">220</small></button>
+      </div>
+
+      <!-- Fruits -->
+      <div class="food-cat-panel" id="food-cat-fruits" style="display:none;flex-wrap:wrap;gap:8px;">
+        <button class="activity-type-btn" onclick="quickAddFood('Apple (medium)', 95)">🍎 Apple <small style="opacity:.7;">95</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Banana (medium)', 105)">🍌 Banana <small style="opacity:.7;">105</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Orange (medium)', 62)">🍊 Orange <small style="opacity:.7;">62</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Mango (1 cup diced)', 100)">🥭 Mango <small style="opacity:.7;">100</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pineapple (1 cup)', 82)">🍍 Pineapple <small style="opacity:.7;">82</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Watermelon (1 cup)', 46)">🍉 Watermelon <small style="opacity:.7;">46</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Strawberries (1 cup)', 49)">🍓 Strawberries <small style="opacity:.7;">49</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Blueberries (1 cup)', 84)">🫐 Blueberries <small style="opacity:.7;">84</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Raspberries (1 cup)', 64)">🫒 Raspberries <small style="opacity:.7;">64</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Grapes (1 cup)', 104)">🍇 Grapes <small style="opacity:.7;">104</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pear (medium)', 101)">🍐 Pear <small style="opacity:.7;">101</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Peach (medium)', 59)">🍑 Peach <small style="opacity:.7;">59</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Kiwi (medium)', 42)">🥝 Kiwi <small style="opacity:.7;">42</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Papaya (1 cup)', 62)">🧡 Papaya <small style="opacity:.7;">62</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Guava (medium)', 68)">🟢 Guava <small style="opacity:.7;">68</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Avocado (medium)', 240)">🥑 Avocado <small style="opacity:.7;">240</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cantaloupe (1 cup)', 54)">🍈 Cantaloupe <small style="opacity:.7;">54</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cherries (1 cup)', 87)">🍒 Cherries <small style="opacity:.7;">87</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Grapefruit (½ medium)', 52)">🍊 Grapefruit <small style="opacity:.7;">52</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pomegranate (½ cup seeds)', 72)">🔴 Pomegranate <small style="opacity:.7;">72</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Plum (medium)', 30)">🟣 Plum <small style="opacity:.7;">30</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Dates (3 pcs)', 66)">🌴 Dates <small style="opacity:.7;">66</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Coconut (1oz meat)', 100)">🥥 Coconut <small style="opacity:.7;">100</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Passion Fruit (1 pc)', 17)">💜 Passion Fruit <small style="opacity:.7;">17</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Fruit Salad Bowl', 120)">🥗 Fruit Salad <small style="opacity:.7;">120</small></button>
+      </div>
+
+      <!-- Snacks -->
+      <div class="food-cat-panel" id="food-cat-snacks" style="display:none;flex-wrap:wrap;gap:8px;">
+        <!-- Nuts & Seeds -->
+        <button class="activity-type-btn" onclick="quickAddFood('Almonds (1oz / 23 nuts)', 164)">🌰 Almonds <small style="opacity:.7;">164</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Walnuts (1oz / 14 halves)', 185)">🌰 Walnuts <small style="opacity:.7;">185</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cashews (1oz / 18 nuts)', 157)">🥜 Cashews <small style="opacity:.7;">157</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Peanuts (1oz)', 161)">🥜 Peanuts <small style="opacity:.7;">161</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pistachios (1oz / 49 nuts)', 159)">🌰 Pistachios <small style="opacity:.7;">159</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Mixed Nuts (1oz)', 172)">🥜 Mixed Nuts <small style="opacity:.7;">172</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Pumpkin Seeds (1oz)', 151)">🎃 Pumpkin Seeds <small style="opacity:.7;">151</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Sunflower Seeds (1oz)', 165)">🌻 Sunflower Seeds <small style="opacity:.7;">165</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chia Seeds (1 tbsp)', 60)">⚫ Chia Seeds <small style="opacity:.7;">60</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Flax Seeds (1 tbsp)', 55)">🟤 Flax Seeds <small style="opacity:.7;">55</small></button>
+        <!-- Dairy Snacks -->
+        <button class="activity-type-btn" onclick="quickAddFood('Greek Yogurt (5.3oz)', 130)">🥛 Greek Yogurt <small style="opacity:.7;">130</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cottage Cheese (½ cup)', 90)">🧀 Cottage Cheese <small style="opacity:.7;">90</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('String Cheese (1 stick)', 80)">🧀 String Cheese <small style="opacity:.7;">80</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Babybel Cheese (1 wheel)', 70)">🧀 Babybel <small style="opacity:.7;">70</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Kefir (1 cup)', 110)">🥛 Kefir <small style="opacity:.7;">110</small></button>
+        <!-- Protein Snacks -->
+        <button class="activity-type-btn" onclick="quickAddFood('Hard Boiled Egg', 78)">🥚 Boiled Egg <small style="opacity:.7;">78</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Jerky (1oz)', 116)">🥩 Jerky <small style="opacity:.7;">116</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Tuna Packet (2.6oz)', 80)">🐟 Tuna Packet <small style="opacity:.7;">80</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Edamame (½ cup)', 95)">🫛 Edamame <small style="opacity:.7;">95</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Turkey Slices (2oz)', 60)">🦃 Turkey Slices <small style="opacity:.7;">60</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Protein Bar', 200)">🍫 Protein Bar <small style="opacity:.7;">200</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('RX Bar', 210)">🍫 RX Bar <small style="opacity:.7;">210</small></button>
+        <!-- Veggie Snacks -->
+        <button class="activity-type-btn" onclick="quickAddFood('Baby Carrots (1 cup)', 50)">🥕 Baby Carrots <small style="opacity:.7;">50</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Celery + Peanut Butter (1 tbsp)', 100)">🥬 Celery+PB <small style="opacity:.7;">100</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cucumber Slices (1 cup)', 16)">🥒 Cucumber <small style="opacity:.7;">16</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Bell Pepper Strips (1 cup)', 30)">🫑 Bell Pepper <small style="opacity:.7;">30</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Cherry Tomatoes (1 cup)', 27)">🍅 Cherry Tomato <small style="opacity:.7;">27</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Hummus (2 tbsp) + Veggies', 90)">🫓 Hummus+Veg <small style="opacity:.7;">90</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Guacamole (2 tbsp) + Veggies', 90)">🥑 Guac+Veg <small style="opacity:.7;">90</small></button>
+        <!-- Nut Butters -->
+        <button class="activity-type-btn" onclick="quickAddFood('Peanut Butter (1 tbsp)', 95)">🥜 Peanut Butter <small style="opacity:.7;">95</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Almond Butter (1 tbsp)', 98)">🌰 Almond Butter <small style="opacity:.7;">98</small></button>
+        <!-- Healthy Carbs -->
+        <button class="activity-type-btn" onclick="quickAddFood('Rice Cake (1 cake)', 35)">⚪ Rice Cake <small style="opacity:.7;">35</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Whole Grain Crackers (5 pcs)', 80)">🟫 Crackers <small style="opacity:.7;">80</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Popcorn (air-popped, 3 cups)', 90)">🍿 Popcorn <small style="opacity:.7;">90</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Oatmeal (½ cup)', 79)">🥣 Oatmeal ½ <small style="opacity:.7;">79</small></button>
+        <!-- Sweet Treats (better-for-you) -->
+        <button class="activity-type-btn" onclick="quickAddFood('Dark Chocolate (1 square)', 55)">🍫 Dark Choc <small style="opacity:.7;">55</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Apple + Peanut Butter (1 tbsp)', 190)">🍏 Apple+PB <small style="opacity:.7;">190</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Banana + Almond Butter (1 tbsp)', 203)">🍌 Banana+AB <small style="opacity:.7;">203</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Yogurt + Berries + Honey', 200)">🍯 Yogurt Bowl <small style="opacity:.7;">200</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Chia Pudding', 180)">⚫ Chia Pudding <small style="opacity:.7;">180</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Trail Mix (¼ cup)', 175)">🥜 Trail Mix <small style="opacity:.7;">175</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Frozen Grapes (1 cup)', 104)">🍇 Frozen Grapes <small style="opacity:.7;">104</small></button>
+        <button class="activity-type-btn" onclick="quickAddFood('Frozen Banana Bites', 90)">🍌 Frozen Banana <small style="opacity:.7;">90</small></button>
       </div>
 
       <!-- Drinks -->
@@ -3666,6 +3751,60 @@ function getPortionVisual(name) {
   if (n.includes('puff puff')) return '🟠 3 medium balls.';
   if (n.includes('chin chin')) return '🍪 A small bowl (~½ cup / 40g).';
   if (n.includes('pap') || n.includes('akamu') || n.includes('oatmeal')) return '🥣 A small bowl (~1 cup prepared).';
+  // Fruits
+  if (n.includes('apple') || n.includes('pear') || n.includes('orange') || n.includes('peach') || n.includes('plum')) {
+    return '🍎 One medium fruit (about the size of a tennis ball / your fist).';
+  }
+  if (n.includes('banana')) return '🍌 One medium banana (~7 inches long).';
+  if (n.includes('mango') || n.includes('pineapple') || n.includes('papaya') || n.includes('watermelon') || n.includes('cantaloupe')) {
+    return '🥭 1 cup diced (~150g). One whole small fruit is usually 2–3x.';
+  }
+  if (n.includes('berries') || n.includes('strawberr') || n.includes('blueberr') || n.includes('raspberr') || n.includes('cherries') || n.includes('grapes')) {
+    return '🫐 1 packed cup (~150g). Small handful ≈ 0.25x.';
+  }
+  if (n.includes('kiwi') || n.includes('guava')) return '🥝 One medium fruit.';
+  if (n.includes('grapefruit')) return '🍊 Half a medium grapefruit.';
+  if (n.includes('pomegranate')) return '🔴 ½ cup arils (seeds). A whole fruit is ~2x.';
+  if (n.includes('dates')) return '🌴 3 medium Medjool dates.';
+  if (n.includes('coconut')) return '🥥 1oz (~28g) fresh coconut meat.';
+  if (n.includes('passion fruit')) return '💜 One whole passion fruit.';
+  if (n.includes('fruit salad')) return '🥗 A small bowl (~1 cup mixed fruit).';
+  // Nuts & seeds
+  if (n.includes('almonds') || n.includes('walnuts') || n.includes('cashews') || n.includes('peanuts') || n.includes('pistachios') || n.includes('mixed nuts')) {
+    return '🥜 1 oz = a small handful (~¼ cup). Easy to overeat — measure!';
+  }
+  if (n.includes('pumpkin seeds') || n.includes('sunflower seeds')) return '🌻 1 oz = ~¼ cup (small handful).';
+  if (n.includes('chia seeds') || n.includes('flax seeds')) return '⚫ 1 tablespoon (level).';
+  if (n.includes('trail mix')) return '🥜 ¼ cup (small handful). Very easy to overeat.';
+  // Dairy snacks
+  if (n.includes('cottage cheese')) return '🧀 ½ cup (~113g).';
+  if (n.includes('string cheese') || n.includes('babybel')) return '🧀 One stick / one wheel.';
+  if (n.includes('kefir')) return '🥛 1 cup (~240ml).';
+  // Protein snacks
+  if (n.includes('jerky')) return '🥩 1 oz (~28g) — small bag portion.';
+  if (n.includes('tuna packet')) return '🐟 One 2.6oz packet.';
+  if (n.includes('edamame')) return '🫛 ½ cup shelled beans.';
+  if (n.includes('turkey slice')) return '🦃 2oz (~2 thin deli slices).';
+  if (n.includes('protein bar') || n.includes('rx bar')) return '🍫 One standard bar (~50–60g).';
+  // Veggie snacks
+  if (n.includes('baby carrot')) return '🥕 1 cup (~10 baby carrots).';
+  if (n.includes('celery')) return '🥬 2 celery stalks + 1 tbsp peanut butter.';
+  if (n.includes('cucumber')) return '🥒 1 cup sliced.';
+  if (n.includes('bell pepper')) return '🫑 1 cup strips (~1 medium pepper).';
+  if (n.includes('cherry tomato')) return '🍅 1 cup (~15 tomatoes).';
+  if (n.includes('hummus') || n.includes('guacamole') || n.includes('guac')) return '🫓 2 tablespoons dip + a cup of veggies.';
+  // Nut butters
+  if (n.includes('peanut butter') || n.includes('almond butter')) return '🥜 1 level tablespoon (~16g). NOT a spoonful heaped.';
+  // Healthy carbs
+  if (n.includes('rice cake')) return '⚪ One rice cake.';
+  if (n.includes('cracker')) return '🟫 5 whole grain crackers.';
+  if (n.includes('popcorn')) return '🍿 3 cups air-popped (large bowl).';
+  // Sweet treats
+  if (n.includes('dark chocolate') || n.includes('dark choc')) return '🍫 One square (~10g). Not the whole bar!';
+  if (n.includes('yogurt bowl')) return '🍯 ½ cup Greek yogurt + ¼ cup berries + drizzle of honey.';
+  if (n.includes('chia pudding')) return '⚫ Small ramekin (~½ cup).';
+  if (n.includes('frozen grape')) return '🍇 1 cup.';
+  if (n.includes('frozen banana')) return '🍌 ½ banana, sliced and frozen.';
   // Default
   return '🍽️ A standard serving (about the size of your fist for solids, one cup for liquids).';
 }
